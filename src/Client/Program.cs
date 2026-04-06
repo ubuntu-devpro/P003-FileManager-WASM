@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using FileManager.Client;
+using FileManager.Client.Services;
 using Radzen;
-using Radzen.Blazor;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -16,5 +16,8 @@ builder.Services.AddScoped(sp => new HttpClient
 
 // Radzen services
 builder.Services.AddRadzenComponents();
+
+// Auth service
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 await builder.Build().RunAsync();

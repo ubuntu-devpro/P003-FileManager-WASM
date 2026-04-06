@@ -1,11 +1,14 @@
 using FileManager.Server.Services;
 using FileManager.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FileManager.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class FilesController : ControllerBase
 {
     private readonly IFileService _fileService;
@@ -16,22 +19,46 @@ public class FilesController : ControllerBase
         _fileService = fileService;
     }
 
-    [HttpGet]
-    public async Task<FileListResponse> List([FromQuery] string path = "/home/devpro/data")
+    private string GetDomain()
     {
-        return await _fileService.GetFilesAsync(path);
+        return User.FindFirst("domain")?.Value ?? "";
+    }
+
+    private bool IsAdmin()
+    {
+        return User.FindFirst(ClaimTypes.Role)?.Value == "Admin";
+    }
+
+    private string GetRootPathForUser()
+    {
+        if (IsAdmin())
+            return RootPath;
+        var domain = GetDomain();
+        return $"{RootPath}/{domain}";
+    }
+
+    [HttpGet]
+    public async Task<FileListResponse> List([FromQuery] string? path = null)
+    {
+        var root = GetRootPathForUser();
+        var targetPath = string.IsNullOrEmpty(path) ? root : path;
+        return await _fileService.GetFilesAsync(targetPath);
     }
 
     [HttpGet("tree")]
-    public async Task<FolderTreeResponse> Tree([FromQuery] string path = "/home/devpro/data")
+    public async Task<FolderTreeResponse> Tree([FromQuery] string? path = null)
     {
-        return await _fileService.GetFolderTreeAsync(path);
+        var root = GetRootPathForUser();
+        var targetPath = string.IsNullOrEmpty(path) ? root : path;
+        return await _fileService.GetFolderTreeAsync(targetPath);
     }
 
     [HttpPost("search")]
     public async Task<SearchResponse> Search([FromBody] SearchRequest req)
     {
-        return await _fileService.SearchAsync(req.Path, req.Query);
+        var root = GetRootPathForUser();
+        var searchPath = string.IsNullOrEmpty(req.Path) ? root : req.Path;
+        return await _fileService.SearchAsync(searchPath, req.Query);
     }
 
     [HttpPatch("rename")]

@@ -1,11 +1,13 @@
 using FileManager.Server.Services;
 using FileManager.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FileManager.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UploadController : ControllerBase
 {
     private readonly IFileService _fileService;

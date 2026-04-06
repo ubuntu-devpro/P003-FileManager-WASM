@@ -3,6 +3,8 @@
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 @inject IJSRuntime JSRuntime
+@inject IAuthService Auth
+@inject NavigationManager Nav
 @using FileManager.Shared.Models
 @using Radzen
 @using Radzen.Blazor
@@ -23,6 +25,16 @@
     <!-- Main Content -->
     <RadzenBody>
         <div class="fm-container">
+            <!-- User Info -->
+            <div class="fm-userbar">
+                <span>@Auth.State.Email</span>
+                @if (Auth.State.IsAdmin)
+                {
+                    <span class="admin-badge">Admin</span>
+                }
+                <button class="logout-btn" @onclick="Logout">登出</button>
+            </div>
+
             <!-- Toolbar -->
             <div class="fm-toolbar">
                 <RadzenButton Icon="refresh" Text="刷新" Click="@Refresh" Size="ButtonSize.Small" />
@@ -188,6 +200,15 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await Auth.CheckSessionAsync();
+        if (!Auth.State.IsAuthenticated)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+        // Set root path based on user domain
+        if (!Auth.State.IsAdmin)
+            currentPath = $"/home/devpro/data/{Auth.State.Domain}";
         await LoadFiles();
     }
 
@@ -496,6 +517,13 @@
         {
             isUploading = false;
         }
+    }
+
+    // ===== Logout =====
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/login");
     }
 
     // ===== Helpers =====

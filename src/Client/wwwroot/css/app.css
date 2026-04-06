@@ -303,3 +303,37 @@
 .rz-panel-menu-item > .rzi {
     font-size: 1rem !important;
 }
+
+/* ===== User Bar ===== */
+.fm-userbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: #1a1a2e;
+    color: white;
+    font-size: 0.85rem;
+    justify-content: flex-end;
+}
+
+.admin-badge {
+    background: #e74c3c;
+    color: white;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.logout-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 0.2rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.logout-btn:hover {
+    background: rgba(255,255,255,0.1);
+}
