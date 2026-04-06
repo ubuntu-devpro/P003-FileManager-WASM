@@ -1,0 +1,339 @@
+/* ===== File Manager Layout ===== */
+.fm-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.fm-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+    flex-wrap: wrap;
+}
+
+.fm-breadcrumb {
+    padding: 0.5rem 1rem;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+    font-size: 0.85rem;
+    color: #555;
+    font-family: monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fm-file-list {
+    flex: 1;
+    overflow: auto;
+    padding: 0;
+}
+
+.fm-statusbar {
+    padding: 0.4rem 1rem;
+    background: #f0f0f0;
+    border-top: 1px solid #ddd;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* ===== File Table ===== */
+.fm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.fm-table thead th {
+    position: sticky;
+    top: 0;
+    background: #f8f8f8;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #ddd;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.fm-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.fm-table tbody tr:hover {
+    background: #f0f7ff;
+}
+
+.fm-table tbody tr.selected {
+    background: #e3f0ff;
+}
+
+.fm-table td {
+    padding: 0.45rem 0.75rem;
+    vertical-align: middle;
+}
+
+.file-name {
+    word-break: break-all;
+}
+
+.file-name.folder {
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+.file-icon {
+    font-size: 1.1rem;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: background 0.1s;
+}
+
+.btn-icon:hover {
+    background: #ddd;
+}
+
+.btn-icon.danger:hover {
+    background: #ffdddd;
+}
+
+/* ===== Folder Tree ===== */
+.folder-tree {
+    font-size: 0.875rem;
+}
+
+.tree-node {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tree-node-row {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    user-select: none;
+    transition: background 0.1s;
+}
+
+.tree-node-row:hover {
+    background: #f0f0f0;
+}
+
+.tree-node-row.active {
+    background: #e3f0ff;
+    font-weight: 600;
+}
+
+.tree-toggle {
+    width: 20px;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.tree-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tree-children {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 1.2rem;
+}
+
+/* ===== Context Menu ===== */
+.fm-context-menu {
+    position: fixed;
+    z-index: 9999;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    min-width: 160px;
+    padding: 4px 0;
+}
+
+.fm-context-menu.hidden {
+    display: none;
+}
+
+.fm-context-menu.visible {
+    display: block;
+}
+
+.ctx-item {
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background 0.1s;
+}
+
+.ctx-item:hover {
+    background: #f0f0f0;
+}
+
+.ctx-item.danger:hover {
+    background: #ffe0e0;
+    color: #c00;
+}
+
+.ctx-sep {
+    height: 1px;
+    background: #eee;
+    margin: 4px 0;
+}
+
+/* ===== Upload Dialog ===== */
+.upload-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-dialog {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    width: 480px;
+    max-width: 90vw;
+}
+
+.upload-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #eee;
+    font-size: 1rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 4px;
+    color: #888;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.upload-body {
+    padding: 1rem 1.25rem;
+}
+
+.upload-body p {
+    margin: 0 0 0.75rem;
+    font-size: 0.875rem;
+    color: #555;
+}
+
+.upload-body input[type="file"] {
+    border: 2px dashed #ccc;
+    border-radius: 6px;
+    padding: 1rem;
+    width: 100%;
+    background: #fafafa;
+    cursor: pointer;
+}
+
+.upload-list {
+    margin-top: 0.75rem;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.upload-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.upload-item:last-child {
+    border-bottom: none;
+}
+
+.upload-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid #eee;
+}
+
+/* ===== Radzen Overrides ===== */
+.rz-sidebar {
+    background: #fafafa !important;
+    border-right: 1px solid #ddd !important;
+}
+
+.rz-panel-menu {
+    background: transparent !important;
+    border: none !important;
+}
+
+.rz-panel-menu-item > .rzi {
+    font-size: 1rem !important;
+}
+
+/* ===== User Bar ===== */
+.fm-userbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: #1a1a2e;
+    color: white;
+    font-size: 0.85rem;
+    justify-content: flex-end;
+}
+
+.admin-badge {
+    background: #e74c3c;
+    color: white;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.logout-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 0.2rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.logout-btn:hover {
+    background: rgba(255,255,255,0.1);
+}

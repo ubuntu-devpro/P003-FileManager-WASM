@@ -1,0 +1,128 @@
+{
+  "date": "2026-04-07 00:50:09",
+  "total": 15,
+  "passed": 13,
+  "failed": 2,
+  "cases": [
+    {
+      "case_id": "FA001",
+      "name": "使用者登入",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FA002",
+      "name": "多網域權限",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FA003",
+      "name": "登出",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FA004",
+      "name": "Session驗證",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "API 驗證為主，無專屬 UI"
+    },
+    {
+      "case_id": "FM001",
+      "name": "資料夾瀏覽",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM002",
+      "name": "新增資料夾",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM003",
+      "name": "重新命名",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM004",
+      "name": "移動檔案",
+      "api": true,
+      "ui": false,
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "case_id": "FM005",
+      "name": "刪除",
+      "api": true,
+      "ui": false,
+      "status": "FAIL",
+      "note": ""
+    },
+    {
+      "case_id": "FM006",
+      "name": "單一上傳",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM007",
+      "name": "多重上傳",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM008",
+      "name": "拖拉上傳",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "UI 元件檢查"
+    },
+    {
+      "case_id": "FM009",
+      "name": "單一下載",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM010",
+      "name": "多重下載",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM011",
+      "name": "搜尋",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    }
+  ]
+}

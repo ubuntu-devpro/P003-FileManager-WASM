@@ -42,6 +42,7 @@
                 <RadzenButton Icon="upload" Text="上傳" Click="@ShowUploadDialog" Size="ButtonSize.Small" />
                 <RadzenButton Icon="download" Text="下載" Disabled="@(!HasSelectedFiles)" Click="@DownloadSelected" Size="ButtonSize.Small" />
                 <RadzenButton Icon="delete" Text="刪除" Disabled="@(!HasSelectedFiles)" ButtonStyle="ButtonStyle.Danger" Click="@DeleteSelected" Size="ButtonSize.Small" />
+                <RadzenButton Icon="drive_file_move" Text="移動" Disabled="@(!HasSelectedFiles)" Click="@ShowMoveDialog" Size="ButtonSize.Small" />
                 <RadzenTextBox @bind-Value="searchQuery" Placeholder="搜尋..." Change="@OnSearch" Style="width:180px; margin-left:auto;" />
             </div>
 
@@ -174,6 +175,67 @@
     </div>
 }
 
+<!-- Move Overlay -->
+@if (moveDialogVisible)
+{
+    <div class="upload-overlay" @onclick="@(() => moveDialogVisible = false)">
+        <div class="upload-dialog" @onclick:stopPropagation="true" style="width:450px;">
+            <div class="upload-header">
+                <strong>📂 移動至...</strong>
+                <button class="close-btn" @onclick="@(() => moveDialogVisible = false)">✕</button>
+            </div>
+            <div class="upload-body">
+                <p>已選取 @selectedPaths.Count 個項目，選擇目標資料夾：</p>
+                <p style="margin:0 0 0.5rem; font-size:0.8rem; color:#999; font-family:monospace;">
+                    📂 @_moveBrowsePath
+                </p>
+                <div style="border:1px solid #ddd; border-radius:6px; max-height:280px; overflow-y:auto;">
+                    @if (_moveBrowsePath != "/home/devpro/data")
+                    {
+                        <div class="move-folder-item" @onclick="MoveGoUp">
+                            📁 .. (上一層)
+                        </div>
+                    }
+                    @if (moveFolderList != null && moveFolderList.Any())
+                    {
+                        @foreach (var folder in moveFolderList)
+                        {
+                            var path = folder.Path;
+                            var name = folder.Name;
+                            <div class="move-folder-item @(_moveDestination == path ? "selected" : "")"
+                                 @onclick="@(() => _moveDestination = path)"
+                                 @ondblclick="@(async () => { _moveBrowsePath = path; _moveDestination = path; await LoadMoveFolders(path); })">
+                                📁 @name
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div style="padding:12px; color:#aaa; font-size:0.85rem; text-align:center;">沒有子資料夾</div>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(_moveDestination))
+                {
+                    <p style="margin:0.5rem 0 0; font-size:0.85rem; color:#333;">
+                        ➜ 移動到：<strong>@Path.GetFileName(_moveDestination)</strong>
+                    </p>
+                }
+                else
+                {
+                    <p style="margin:0.5rem 0 0; font-size:0.85rem; color:#aaa;">請點擊選擇目標資料夾</p>
+                }
+            </div>
+            <div class="upload-footer">
+                <RadzenButton Text="取消" Click="@(() => moveDialogVisible = false)" ButtonStyle="ButtonStyle.Secondary" />
+                <RadzenButton Text="移動" Icon="drive_file_move"
+                              Click="@(async () => { moveDialogVisible = false; await ExecuteMove(); })"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Disabled="@(string.IsNullOrEmpty(_moveDestination) || _moveDestination == currentPath)" />
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private List<FileItem>? files;
     private string currentPath = "/home/devpro/data";
@@ -210,6 +272,14 @@
         if (!Auth.State.IsAdmin)
             currentPath = $"/home/devpro/data/{Auth.State.Domain}";
         await LoadFiles();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("setDotnetReference", DotNetObjectReference.Create(this));
+        }
     }
 
     private async Task LoadFiles()
@@ -321,22 +391,30 @@
     }
 
     // ===== New Folder =====
+    [JSInvokable]
+    public void TriggerNewFolderDialog() => ShowNewFolderDialog();
+
+    [JSInvokable]
+    public void CloseDialog() => DialogService.Close();
     private string _newFolderName = "新資料夾";
 
-    private async Task ShowNewFolderDialog()
+    private void ShowNewFolderDialog()
     {
         CloseContextMenu();
         _newFolderName = "新資料夾";
-        await DialogService.OpenAsync("📁 新增資料夾",
+        DialogService.Open("📁 新增資料夾",
             ds => @<div style="padding:1rem;">
                 <RadzenTextBox @bind-Value="_newFolderName" Placeholder="資料夾名稱" Style="width:100%;" />
                 <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;">
                     <RadzenButton Text="取消" Click="@(() => DialogService.Close(null))" ButtonStyle="ButtonStyle.Secondary" />
-                    <RadzenButton Text="建立" Click="@(() => DialogService.Close(_newFolderName))" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="建立" Click="@(async () => { DialogService.Close(); await CompleteNewFolderDialog(); })" ButtonStyle="ButtonStyle.Primary" />
                 </div>
             </div>,
             new DialogOptions { Width = "380px" });
+    }
 
+    private async Task CompleteNewFolderDialog()
+    {
         if (!string.IsNullOrWhiteSpace(_newFolderName) && _newFolderName != "新資料夾")
         {
             var resp = await Http.PostAsync($"api/folders?path={Uri.EscapeDataString(currentPath)}&name={Uri.EscapeDataString(_newFolderName)}", null);
@@ -356,23 +434,107 @@
         }
     }
 
+    // ===== Move =====
+    private bool moveDialogVisible;
+    private List<FileItem>? moveFolderList;
+    private string _moveDestination = "";
+    private string _moveBrowsePath = "";
+
+    [JSInvokable]
+    public async Task TriggerMoveDialog() => await ShowMoveDialog();
+    private async Task ShowMoveDialog()
+    {
+        if (!selectedPaths.Any()) return;
+        CloseContextMenu();
+
+        _moveDestination = "";
+        _moveBrowsePath = currentPath;
+        await LoadMoveFolders(_moveBrowsePath);
+        moveDialogVisible = true;
+    }
+
+    private async Task MoveGoUp()
+    {
+        _moveBrowsePath = GetParentPath(_moveBrowsePath);
+        _moveDestination = _moveBrowsePath;
+        await LoadMoveFolders(_moveBrowsePath);
+    }
+
+    private async Task LoadMoveFolders(string path)
+    {
+        try
+        {
+            var resp = await Http.GetAsync($"api/files?path={Uri.EscapeDataString(path)}");
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<FileListResponse>();
+                if (result?.Success == true)
+                    moveFolderList = result.Items?.Where(f => f.IsDirectory).ToList() ?? new();
+                else
+                    moveFolderList = new();
+            }
+        }
+        catch { moveFolderList = new(); }
+        StateHasChanged();
+    }
+
+    private string GetParentPath(string path)
+    {
+        var parent = Path.GetDirectoryName(path);
+        if (string.IsNullOrEmpty(parent) || !parent.StartsWith("/home/devpro/data"))
+            return "/home/devpro/data";
+        return parent;
+    }
+
+    private async Task ExecuteMove()
+    {
+        var paths = selectedPaths.ToArray();
+        var resp = await Http.PatchAsJsonAsync("api/files/move",
+            new { sourcePaths = paths, destinationPath = _moveDestination });
+        if (resp.IsSuccessStatusCode)
+        {
+            var apiResp = await resp.Content.ReadFromJsonAsync<ApiResponse>();
+            if (apiResp?.Success == true)
+            {
+                NotificationService.Notify(NotificationSeverity.Success, "成功", $"已移動 {paths.Length} 個項目");
+                selectedPaths.Clear();
+                await Refresh();
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Warning, "警告", apiResp?.Message ?? "移動失敗");
+        }
+        else
+            NotificationService.Notify(NotificationSeverity.Error, "錯誤", $"HTTP {(int)resp.StatusCode}");
+    }
+
     // ===== Rename =====
+    [JSInvokable]
+    public void TriggerRenameDialog()
+    {
+        if (files?.FirstOrDefault() is FileItem item)
+        {
+            ShowRenameDialog(item);
+        }
+    }
     private string _renameNewName = "";
 
-    private async Task ShowRenameDialog(FileItem item)
+    private void ShowRenameDialog(FileItem item)
     {
         CloseContextMenu();
         _renameNewName = item.Name;
-        await DialogService.OpenAsync($"✏️ 重新命名：{item.Name}",
+        DialogService.Open($"✏️ 重新命名：{item.Name}",
             ds => @<div style="padding:1rem;">
                 <RadzenTextBox @bind-Value="_renameNewName" Style="width:100%;" />
                 <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;">
                     <RadzenButton Text="取消" Click="@(() => DialogService.Close(null))" ButtonStyle="ButtonStyle.Secondary" />
-                    <RadzenButton Text="確認" Click="@(() => DialogService.Close(_renameNewName))" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="確認" Click="@(async () => { DialogService.Close(); await CompleteRenameDialog(item); })" ButtonStyle="ButtonStyle.Primary" />
                 </div>
             </div>,
             new DialogOptions { Width = "380px" });
+    }
 
+    private async Task CompleteRenameDialog(FileItem item)
+    {
         if (!string.IsNullOrWhiteSpace(_renameNewName) && _renameNewName != item.Name)
         {
             var resp = await Http.PatchAsJsonAsync("api/files/rename", new { currentPath = item.Path, newName = _renameNewName });
@@ -393,32 +555,46 @@
     }
 
     // ===== Delete =====
-    private async Task DeleteItem(FileItem item)
+    [JSInvokable]
+    public void TriggerDeleteDialog()
+    {
+        if (files?.FirstOrDefault() is FileItem item)
+        {
+            DeleteItem(item);
+        }
+    }
+    private void DeleteItem(FileItem item)
     {
         CloseContextMenu();
-        var resp = await Http.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "api/files")
-        {
-            Content = JsonContent.Create(new { paths = new[] { item.Path } })
-        });
-        if (resp.IsSuccessStatusCode)
-        {
-            var apiResp = await resp.Content.ReadFromJsonAsync<ApiResponse>();
-            if (apiResp?.Success == true)
-            {
-                NotificationService.Notify(NotificationSeverity.Success, "成功", "已刪除");
-                await Refresh();
-            }
-            else
-                NotificationService.Notify(NotificationSeverity.Warning, "警告", apiResp?.Message ?? "刪除失敗");
-        }
-        else
-            NotificationService.Notify(NotificationSeverity.Error, "錯誤", $"HTTP {(int)resp.StatusCode}");
+        ShowDeleteConfirmDialog(new[] { item.Path }, item.Name);
     }
 
-    private async Task DeleteSelected()
+    private void DeleteSelected()
     {
         if (!selectedPaths.Any()) return;
-        var paths = selectedPaths.ToArray();
+        ShowDeleteConfirmDialog(selectedPaths.ToArray(), null);
+    }
+
+    private void ShowDeleteConfirmDialog(string[] paths, string? singleName)
+    {
+        var message = singleName != null
+            ? $"確定要刪除「{singleName}」嗎？"
+            : $"確定要刪除選取的 {paths.Length} 個項目嗎？";
+
+        DialogService.Open("🗑️ 確認刪除",
+            ds => @<div style="padding:1rem;">
+                <p style="margin:0 0 1rem;">@message</p>
+                <p style="margin:0; font-size:0.85rem; color:#888;">此操作無法復原。</p>
+                <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1.5rem;">
+                    <RadzenButton Text="取消" Click="@(() => DialogService.Close())" ButtonStyle="ButtonStyle.Secondary" />
+                    <RadzenButton Text="刪除" Icon="delete" Click="@(async () => { DialogService.Close(); await ExecuteDelete(paths); })" ButtonStyle="ButtonStyle.Danger" />
+                </div>
+            </div>,
+            new DialogOptions { Width = "400px" });
+    }
+
+    private async Task ExecuteDelete(string[] paths)
+    {
         var resp = await Http.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "api/files")
         {
             Content = JsonContent.Create(new { paths })
@@ -428,7 +604,8 @@
             var apiResp = await resp.Content.ReadFromJsonAsync<ApiResponse>();
             if (apiResp?.Success == true)
             {
-                NotificationService.Notify(NotificationSeverity.Success, "成功", $"已刪除 {paths.Length} 項");
+                NotificationService.Notify(NotificationSeverity.Success, "成功",
+                    paths.Length == 1 ? "已刪除" : $"已刪除 {paths.Length} 項");
                 await Refresh();
             }
             else
@@ -502,10 +679,15 @@
                 var resp = await Http.PostAsync($"api/upload?destinationPath={Uri.EscapeDataString(currentPath)}", content);
                 if (resp.IsSuccessStatusCode)
                     done++;
+                else
+                    NotificationService.Notify(NotificationSeverity.Warning, "警告", $"上傳 {file.Name} 失敗：HTTP {(int)resp.StatusCode}");
                 uploadProgress = (int)((done / (double)total) * 100);
                 StateHasChanged();
             }
-            NotificationService.Notify(NotificationSeverity.Success, "成功", $"已上傳 {done}/{total} 個檔案");
+            if (done > 0)
+                NotificationService.Notify(NotificationSeverity.Success, "成功", $"已上傳 {done}/{total} 個檔案");
+            else
+                NotificationService.Notify(NotificationSeverity.Error, "失敗", "所有檔案上傳失敗");
             uploadDialogVisible = false;
             await Refresh();
         }

@@ -1,6 +1,6 @@
 using FileManager.Server.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -34,7 +34,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazor", policy =>
     {
-        policy.WithOrigins("http://localhost:5000", "http://localhost:5001")
+        policy.WithOrigins("http://localhost:5000", "http://localhost:5001", "http://localhost:5002")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -50,7 +50,19 @@ var app = builder.Build();
 app.UseCors("AllowBlazor");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseStaticFiles();  // Serve Blazor WASM static files
+
+// Static files with proper MIME types for WASM
+var contentTypeProvider = new FileExtensionContentTypeProvider();
+contentTypeProvider.Mappings[".dat"] = "application/octet-stream";
+contentTypeProvider.Mappings[".dll"] = "application/octet-stream";
+contentTypeProvider.Mappings[".wasm"] = "application/wasm";
+contentTypeProvider.Mappings[".br"] = "application/brotli";
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = contentTypeProvider,
+    ServeUnknownFileTypes = true,
+});
+
 app.MapControllers();
 
 // Fallback to index.html for Blazor WASM routing

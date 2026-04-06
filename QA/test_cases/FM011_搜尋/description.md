@@ -10,25 +10,24 @@
 | 測試環境 | Ubuntu-Devpro（VM）|
 
 ## 功能說明
-在搜尋框輸入關鍵字，按 Enter 搜尋，列出符合的檔案。
+在搜尋框輸入關鍵字，系統即時過濾顯示符合的檔案和資料夾。
 
 ## 測試步驟
-1. 在搜尋框輸入關鍵字（例如 "test"）
-2. 按 Enter
-3. 觀察搜尋結果
+1. 在搜尋框輸入關鍵字（如「test」）
+2. 觀察列表即時過濾結果
 
 ## 預期結果
-- 搜尋框可用
-- 按 Enter 後顯示搜尋結果列表
+- 搜尋框正常輸入
+- 列表即時顯示符合關鍵字的項目
 
 ## 實際結果
-✅ PASS — 搜尋功能正常，TC005_search.png 顯示搜尋結果
+✅ PASS — 搜尋「test」後，結果顯示 test folder 和 test.txt，符合預期。
 
 ## 截圖清單
 | 編號 | 截圖檔案 | 說明 | 狀態 |
 |------|---------|------|------|
-| 001 | screenshots/001_search_input.png | 搜尋框 | ✅ |
-| 002 | screenshots/002_search_results.png | 搜尋結果 | ✅ |
+| 001 | screenshots/001_search_input.png | 搜尋框（側邊欄可見）| ✅ |
+| 002 | screenshots/002_search_results.png | 搜尋結果（test folder + test.txt）| ✅ |
 
 ## 狀態判定
 - ✅ PASS
