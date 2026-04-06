@@ -1,0 +1,174 @@
+@page "/"
+@inject HttpClient Http
+@using FileManager.Shared.Models
+
+<PageTitle>📁 檔案管理器</PageTitle>
+
+<div class="filemanager">
+    <header>
+        <h1>📁 檔案管理器</h1>
+        <div class="path-display">@currentPath</div>
+        <div class="toolbar">
+            <button @onclick="Refresh">🔄 刷新</button>
+            <button @onclick="ShowNewFolderDialog">📁 新增資料夾</button>
+            <input @bind="searchQuery" placeholder="搜尋..." @onkeyup="OnSearchKeyUp" />
+        </div>
+    </header>
+
+    <main>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error">@errorMessage</div>
+        }
+
+        <table>
+            <thead>
+                <tr>
+                    <th>名稱</th>
+                    <th>大小</th>
+                    <th>修改時間</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (files == null)
+                {
+                    <tr><td colspan="4">載入中...</td></tr>
+                }
+                else if (!files.Any())
+                {
+                    <tr><td colspan="4">此資料夾為空</td></tr>
+                }
+                else
+                {
+                    @foreach (var item in files)
+                    {
+                        <tr>
+                            <td @ondblclick="() => OnItemDoubleClick(item)" style="cursor:pointer">
+                                @(item.IsDirectory ? "📁" : "📄") @item.Name
+                            </td>
+                            <td>@FormatSize(item.Size)</td>
+                            <td>@item.Modified.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                @if (item.IsDirectory)
+                                {
+                                    <button @onclick="() => NavigateTo(item)">開</button>
+                                }
+                                <button @onclick="() => ShowRenameDialog(item)">✏️</button>
+                                <button @onclick="() => DeleteItem(item)">🗑️</button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </main>
+</div>
+
+@code {
+    private List<FileItem> files = new();
+    private string currentPath = "/home/devpro/data";
+    private string? errorMessage;
+    private string searchQuery = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFiles();
+    }
+
+    private async Task LoadFiles()
+    {
+        errorMessage = null;
+        try
+        {
+            var resp = await Http.GetAsync($"api/files?path={Uri.EscapeDataString(currentPath)}");
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<FileListResponse>();
+                if (result?.Success == true)
+                    files = result.Items;
+                else
+                    errorMessage = result?.Message ?? "載入失敗";
+            }
+            else
+            {
+                errorMessage = $"HTTP {resp.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task Refresh()
+    {
+        await LoadFiles();
+    }
+
+    private void NavigateTo(FileItem item)
+    {
+        if (item.IsDirectory)
+        {
+            currentPath = item.Path;
+            _ = LoadFiles();
+        }
+    }
+
+    private void OnItemDoubleClick(FileItem item)
+    {
+        NavigateTo(item);
+    }
+
+    private async Task ShowNewFolderDialog()
+    {
+        var name = "新資料夾";
+        var result = await Http.PostAsync($"api/folders?path={Uri.EscapeDataString(currentPath)}&name={Uri.EscapeDataString(name)}", null);
+        if (result.IsSuccessStatusCode)
+            await Refresh();
+    }
+
+    private async Task ShowRenameDialog(FileItem item)
+    {
+        var newName = item.Name;
+        var result = await Http.PatchAsJsonAsync("api/files/rename", new { currentPath = item.Path, newName = newName });
+        if (result.IsSuccessStatusCode)
+            await Refresh();
+    }
+
+    private async Task DeleteItem(FileItem item)
+    {
+        var result = await Http.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "api/files") { Content = JsonContent.Create(new { paths = new[] { item.Path } }) });
+        if (result.IsSuccessStatusCode)
+            await Refresh();
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(searchQuery))
+        {
+            var resp = await Http.PostAsJsonAsync("api/files/search", new { path = currentPath, query = searchQuery });
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<SearchResponse>();
+                if (result?.Success == true)
+                    files = result.Results;
+            }
+        }
+        else if (e.Key == "Escape")
+        {
+            searchQuery = "";
+            await LoadFiles();
+        }
+    }
+
+    private string FormatSize(long size)
+    {
+        if (size == 0) return "-";
+        string[] units = { "B", "KB", "MB", "GB" };
+        int unit = 0;
+        double s = size;
+        while (s >= 1024 && unit < units.Length - 1) { s /= 1024; unit++; }
+        return $"{s:F1} {units[unit]}";
+    }
+}
