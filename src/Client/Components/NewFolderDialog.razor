@@ -1,0 +1,20 @@
+@inject DialogService DialogService
+
+<div style="padding:1rem; min-width: 320px;">
+    <h4 style="margin:0 0 1rem;">📁 新增資料夾</h4>
+    <RadzenTextBox @bind-Value="@folderName" Placeholder="資料夾名稱" Style="width:100%; margin-bottom: 1rem;" />
+    <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+        <RadzenButton Text="取消" Click="@(() => DialogService.Close(null))" ButtonStyle="ButtonStyle.Secondary" />
+        <RadzenButton Text="建立" Click="@Confirm" ButtonStyle="ButtonStyle.Primary" />
+    </div>
+</div>
+
+@code {
+    private string folderName = "新資料夾";
+
+    private void Confirm()
+    {
+        if (!string.IsNullOrWhiteSpace(folderName))
+            DialogService.Close(folderName);
+    }
+}

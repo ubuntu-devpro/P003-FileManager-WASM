@@ -1,75 +1,190 @@
 @page "/"
 @inject HttpClient Http
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+@inject IJSRuntime JSRuntime
 @using FileManager.Shared.Models
+@using Radzen
+@using Radzen.Blazor
 
 <PageTitle>📁 檔案管理器</PageTitle>
 
-<div class="filemanager">
-    <header>
-        <h1>📁 檔案管理器</h1>
-        <div class="path-display">@currentPath</div>
-        <div class="toolbar">
-            <button @onclick="Refresh">🔄 刷新</button>
-            <button @onclick="ShowNewFolderDialog">📁 新增資料夾</button>
-            <input @bind="searchQuery" placeholder="搜尋..." @onkeyup="OnSearchKeyUp" />
+<RadzenLayout>
+    <!-- Sidebar: Folder Tree -->
+    <RadzenSidebar Style="width:250px;">
+        <RadzenHeader>
+            <div style="padding:0.75rem 1rem; font-weight:bold; font-size:0.9rem;">📁 資料夾</div>
+        </RadzenHeader>
+        <div style="padding:0.5rem; overflow-y:auto; height:calc(100vh - 64px);">
+            <FolderTree CurrentPath="@currentPath" OnPathChange="NavigateTo" @ref="folderTree" />
         </div>
-    </header>
+    </RadzenSidebar>
 
-    <main>
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="error">@errorMessage</div>
-        }
+    <!-- Main Content -->
+    <RadzenBody>
+        <div class="fm-container">
+            <!-- Toolbar -->
+            <div class="fm-toolbar">
+                <RadzenButton Icon="refresh" Text="刷新" Click="@Refresh" Size="ButtonSize.Small" />
+                <RadzenButton Icon="create_new_folder" Text="新增資料夾" Click="@ShowNewFolderDialog" Size="ButtonSize.Small" />
+                <RadzenButton Icon="upload" Text="上傳" Click="@ShowUploadDialog" Size="ButtonSize.Small" />
+                <RadzenButton Icon="download" Text="下載" Disabled="@(!HasSelectedFiles)" Click="@DownloadSelected" Size="ButtonSize.Small" />
+                <RadzenButton Icon="delete" Text="刪除" Disabled="@(!HasSelectedFiles)" ButtonStyle="ButtonStyle.Danger" Click="@DeleteSelected" Size="ButtonSize.Small" />
+                <RadzenTextBox @bind-Value="searchQuery" Placeholder="搜尋..." Change="@OnSearch" Style="width:180px; margin-left:auto;" />
+            </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>名稱</th>
-                    <th>大小</th>
-                    <th>修改時間</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (files == null)
-                {
-                    <tr><td colspan="4">載入中...</td></tr>
-                }
-                else if (!files.Any())
-                {
-                    <tr><td colspan="4">此資料夾為空</td></tr>
-                }
-                else
-                {
-                    @foreach (var item in files)
-                    {
+            <!-- Breadcrumb -->
+            <div class="fm-breadcrumb">
+                <span>@currentPath</span>
+            </div>
+
+            <!-- Error -->
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Close="@(() => errorMessage=null)" Style="margin:0.5rem 0;">
+                    @errorMessage
+                </RadzenAlert>
+            }
+
+            <!-- File List Table -->
+            <div class="fm-file-list" @onclick="@CloseContextMenu" @oncontextmenu:preventDefault="true">
+                <table class="fm-table">
+                    <thead>
                         <tr>
-                            <td @ondblclick="() => OnItemDoubleClick(item)" style="cursor:pointer">
-                                @(item.IsDirectory ? "📁" : "📄") @item.Name
-                            </td>
-                            <td>@FormatSize(item.Size)</td>
-                            <td>@item.Modified.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td>
-                                @if (item.IsDirectory)
-                                {
-                                    <button @onclick="() => NavigateTo(item)">開</button>
-                                }
-                                <button @onclick="() => ShowRenameDialog(item)">✏️</button>
-                                <button @onclick="() => DeleteItem(item)">🗑️</button>
-                            </td>
+                            <th style="width:30px;">
+                                <input type="checkbox" @onchange="@SelectAll" checked="@AllSelected" />
+                            </th>
+                            <th style="width:40px;"></th>
+                            <th>名稱</th>
+                            <th style="width:100px; text-align:right;">大小</th>
+                            <th style="width:150px;">修改時間</th>
+                            <th style="width:160px; text-align:center;">操作</th>
                         </tr>
-                    }
+                    </thead>
+                    <tbody>
+                        @if (files == null)
+                        {
+                            <tr><td colspan="6" style="text-align:center;">載入中...</td></tr>
+                        }
+                        else if (!files.Any())
+                        {
+                            <tr><td colspan="6" style="text-align:center; color:#888;">此資料夾為空</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in files)
+                            {
+                                <tr class="@(IsSelected(item) ? "selected" : "")"
+                                    @onclick="@(() => ToggleSelect(item))"
+                                    @ondblclick="@(() => OnItemDoubleClick(item))"
+                                    @oncontextmenu="@(e => ShowContextMenu(e, item))">
+                                    <td @onclick:stopPropagation="true">
+                                        <input type="checkbox" checked="@IsSelected(item)" @onchange="@(e => ToggleSelect(item))" />
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <span class="file-icon">@(item.IsDirectory ? "📁" : GetFileIcon(item.Name))</span>
+                                    </td>
+                                    <td class="file-name @(item.IsDirectory ? "folder" : "")">@item.Name</td>
+                                    <td style="text-align:right;">@(item.IsDirectory ? "-" : FormatSize(item.Size))</td>
+                                    <td>@item.Modified.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td @onclick:stopPropagation="true" style="text-align:center;">
+                                        <button class="btn-icon" @onclick="@(() => NavigateTo(item.Path))" title="開啟">📂</button>
+                                        @if (!item.IsDirectory)
+                                        {
+                                            <button class="btn-icon" @onclick="@(() => DownloadFile(item))" title="下載">⬇️</button>
+                                        }
+                                        <button class="btn-icon" @onclick="@(() => ShowRenameDialog(item))" title="重新命名">✏️</button>
+                                        <button class="btn-icon danger" @onclick="@(() => DeleteItem(item))" title="刪除">🗑️</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="fm-statusbar">
+                @(files?.Count ?? 0) 個項目
+                @if (selectedPaths.Any())
+                {
+                    <span> | 已選取 @selectedPaths.Count 項</span>
                 }
-            </tbody>
-        </table>
-    </main>
-</div>
+            </div>
+        </div>
+    </RadzenBody>
+</RadzenLayout>
+
+<!-- Context Menu -->
+<FmContextMenu Item="@contextItem"
+               Visible="@contextMenuVisible"
+               X="@contextX" Y="@contextY"
+               OnOpen="@(() => NavigateTo(contextItem!.Path))"
+               OnDownload="@(() => DownloadFile(contextItem!))"
+               OnRename="@(() => ShowRenameDialog(contextItem!))"
+               OnDelete="@(() => DeleteItem(contextItem!))" />
+
+<!-- Upload Overlay -->
+@if (uploadDialogVisible)
+{
+    <div class="upload-overlay" @onclick="@(() => uploadDialogVisible = false)">
+        <div class="upload-dialog" @onclick:stopPropagation="true">
+            <div class="upload-header">
+                <strong>⬆️ 上傳檔案</strong>
+                <button class="close-btn" @onclick="@(() => uploadDialogVisible = false)">✕</button>
+            </div>
+            <div class="upload-body">
+                <p>拖曳檔案到下方，或點擊選擇：</p>
+                <InputFile multiple OnChange="@OnFileSelected" accept="*/*" />
+                @if (uploadFiles.Any())
+                {
+                    <div class="upload-list">
+                        @foreach (var f in uploadFiles)
+                        {
+                            <div class="upload-item">
+                                <span>@f.Name</span>
+                                <span>@FormatSize(f.Size)</span>
+                            </div>
+                        }
+                    </div>
+                }
+                @if (isUploading)
+                {
+                    <RadzenProgressBar Value="@uploadProgress" ShowValue="true" Style="margin-top:1rem;" />
+                }
+            </div>
+            <div class="upload-footer">
+                <RadzenButton Text="取消" Click="@(() => uploadDialogVisible = false)" ButtonStyle="ButtonStyle.Secondary" />
+                <RadzenButton Text="上傳" Icon="upload" Click="@UploadFiles" ButtonStyle="ButtonStyle.Primary"
+                              Disabled="@(!uploadFiles.Any() || isUploading)" />
+            </div>
+        </div>
+    </div>
+}
 
 @code {
-    private List<FileItem> files = new();
+    private List<FileItem>? files;
     private string currentPath = "/home/devpro/data";
     private string? errorMessage;
     private string searchQuery = "";
+    private FolderTree? folderTree;
+
+    // Selection
+    private HashSet<string> selectedPaths = new();
+    private bool HasSelectedFiles => selectedPaths.Any();
+    private bool AllSelected => files?.All(f => selectedPaths.Contains(f.Path)) == true;
+
+    // Context Menu
+    private FileItem? contextItem;
+    private bool contextMenuVisible;
+    private int contextX;
+    private int contextY;
+
+    // Upload
+    private bool uploadDialogVisible;
+    private List<IBrowserFile> uploadFiles = new();
+    private bool isUploading;
+    private int uploadProgress;
 
     protected override async Task OnInitializedAsync()
     {
@@ -103,63 +218,308 @@
 
     private async Task Refresh()
     {
+        selectedPaths.Clear();
+        searchQuery = "";
+        await LoadFiles();
+        if (folderTree != null)
+            await folderTree.RefreshAsync();
+    }
+
+    // ===== Navigation =====
+    private async Task NavigateTo(string path)
+    {
+        CloseContextMenu();
+        currentPath = path;
+        selectedPaths.Clear();
         await LoadFiles();
     }
 
-    private void NavigateTo(FileItem item)
+    private async Task OnItemDoubleClick(FileItem item)
     {
         if (item.IsDirectory)
+            await NavigateTo(item.Path);
+    }
+
+    private async Task OnSearch(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
         {
-            currentPath = item.Path;
-            _ = LoadFiles();
+            await LoadFiles();
+            return;
         }
-    }
-
-    private void OnItemDoubleClick(FileItem item)
-    {
-        NavigateTo(item);
-    }
-
-    private async Task ShowNewFolderDialog()
-    {
-        var name = "新資料夾";
-        var result = await Http.PostAsync($"api/folders?path={Uri.EscapeDataString(currentPath)}&name={Uri.EscapeDataString(name)}", null);
-        if (result.IsSuccessStatusCode)
-            await Refresh();
-    }
-
-    private async Task ShowRenameDialog(FileItem item)
-    {
-        var newName = item.Name;
-        var result = await Http.PatchAsJsonAsync("api/files/rename", new { currentPath = item.Path, newName = newName });
-        if (result.IsSuccessStatusCode)
-            await Refresh();
-    }
-
-    private async Task DeleteItem(FileItem item)
-    {
-        var result = await Http.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "api/files") { Content = JsonContent.Create(new { paths = new[] { item.Path } }) });
-        if (result.IsSuccessStatusCode)
-            await Refresh();
-    }
-
-    private async Task OnSearchKeyUp(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(searchQuery))
+        try
         {
-            var resp = await Http.PostAsJsonAsync("api/files/search", new { path = currentPath, query = searchQuery });
+            var resp = await Http.PostAsJsonAsync("api/files/search", new { path = currentPath, query });
             if (resp.IsSuccessStatusCode)
             {
                 var result = await resp.Content.ReadFromJsonAsync<SearchResponse>();
                 if (result?.Success == true)
                     files = result.Results;
+                else
+                    NotificationService.Notify(NotificationSeverity.Warning, "搜尋", result?.Message ?? "無結果");
             }
         }
-        else if (e.Key == "Escape")
+        catch (Exception ex)
         {
-            searchQuery = "";
-            await LoadFiles();
+            NotificationService.Notify(NotificationSeverity.Error, "錯誤", ex.Message);
         }
+    }
+
+    // ===== Selection =====
+    private bool IsSelected(FileItem item) => selectedPaths.Contains(item.Path);
+
+    private void ToggleSelect(FileItem item)
+    {
+        if (selectedPaths.Contains(item.Path))
+            selectedPaths.Remove(item.Path);
+        else
+            selectedPaths.Add(item.Path);
+    }
+
+    private void SelectAll(ChangeEventArgs e)
+    {
+        if (AllSelected)
+            selectedPaths.Clear();
+        else if (files != null)
+            selectedPaths = files.Select(f => f.Path).ToHashSet();
+    }
+
+    // ===== Context Menu =====
+    private void ShowContextMenu(MouseEventArgs e, FileItem item)
+    {
+        contextItem = item;
+        contextMenuVisible = true;
+        contextX = (int)e.ClientX;
+        contextY = (int)e.ClientY;
+        StateHasChanged();
+    }
+
+    private void CloseContextMenu()
+    {
+        contextMenuVisible = false;
+    }
+
+    // ===== New Folder =====
+    private string _newFolderName = "新資料夾";
+
+    private async Task ShowNewFolderDialog()
+    {
+        CloseContextMenu();
+        _newFolderName = "新資料夾";
+        await DialogService.OpenAsync("📁 新增資料夾",
+            ds => @<div style="padding:1rem;">
+                <RadzenTextBox @bind-Value="_newFolderName" Placeholder="資料夾名稱" Style="width:100%;" />
+                <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;">
+                    <RadzenButton Text="取消" Click="@(() => DialogService.Close(null))" ButtonStyle="ButtonStyle.Secondary" />
+                    <RadzenButton Text="建立" Click="@(() => DialogService.Close(_newFolderName))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+            </div>,
+            new DialogOptions { Width = "380px" });
+
+        if (!string.IsNullOrWhiteSpace(_newFolderName) && _newFolderName != "新資料夾")
+        {
+            var resp = await Http.PostAsync($"api/folders?path={Uri.EscapeDataString(currentPath)}&name={Uri.EscapeDataString(_newFolderName)}", null);
+            if (resp.IsSuccessStatusCode)
+            {
+                var apiResp = await resp.Content.ReadFromJsonAsync<ApiResponse>();
+                if (apiResp?.Success == true)
+                {
+                    NotificationService.Notify(NotificationSeverity.Success, "成功", "資料夾已建立");
+                    await Refresh();
+                }
+                else
+                    NotificationService.Notify(NotificationSeverity.Warning, "警告", apiResp?.Message ?? "建立失敗");
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Error, "錯誤", $"HTTP {(int)resp.StatusCode}");
+        }
+    }
+
+    // ===== Rename =====
+    private string _renameNewName = "";
+
+    private async Task ShowRenameDialog(FileItem item)
+    {
+        CloseContextMenu();
+        _renameNewName = item.Name;
+        await DialogService.OpenAsync($"✏️ 重新命名：{item.Name}",
+            ds => @<div style="padding:1rem;">
+                <RadzenTextBox @bind-Value="_renameNewName" Style="width:100%;" />
+                <div style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;">
+                    <RadzenButton Text="取消" Click="@(() => DialogService.Close(null))" ButtonStyle="ButtonStyle.Secondary" />
+                    <RadzenButton Text="確認" Click="@(() => DialogService.Close(_renameNewName))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+            </div>,
+            new DialogOptions { Width = "380px" });
+
+        if (!string.IsNullOrWhiteSpace(_renameNewName) && _renameNewName != item.Name)
+        {
+            var resp = await Http.PatchAsJsonAsync("api/files/rename", new { currentPath = item.Path, newName = _renameNewName });
+            if (resp.IsSuccessStatusCode)
+            {
+                var apiResp = await resp.Content.ReadFromJsonAsync<ApiResponse>();
+                if (apiResp?.Success == true)
+                {
+                    NotificationService.Notify(NotificationSeverity.Success, "成功", "已重新命名");
+                    await Refresh();
+                }
+                else
+                    NotificationService.Notify(NotificationSeverity.Warning, "警告", apiResp?.Message ?? "重新命名失敗");
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Error, "錯誤", $"HTTP {(int)resp.StatusCode}");
+        }
+    }
+
+    // ===== Delete =====
+    private async Task DeleteItem(FileItem item)
+    {
+        CloseContextMenu();
+        var resp = await Http.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "api/files")
+        {
+            Content = JsonContent.Create(new { paths = new[] { item.Path } })
+        });
+        if (resp.IsSuccessStatusCode)
+        {
+            var apiResp = await resp.Content.ReadFromJsonAsync<ApiResponse>();
+            if (apiResp?.Success == true)
+            {
+                NotificationService.Notify(NotificationSeverity.Success, "成功", "已刪除");
+                await Refresh();
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Warning, "警告", apiResp?.Message ?? "刪除失敗");
+        }
+        else
+            NotificationService.Notify(NotificationSeverity.Error, "錯誤", $"HTTP {(int)resp.StatusCode}");
+    }
+
+    private async Task DeleteSelected()
+    {
+        if (!selectedPaths.Any()) return;
+        var paths = selectedPaths.ToArray();
+        var resp = await Http.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "api/files")
+        {
+            Content = JsonContent.Create(new { paths })
+        });
+        if (resp.IsSuccessStatusCode)
+        {
+            var apiResp = await resp.Content.ReadFromJsonAsync<ApiResponse>();
+            if (apiResp?.Success == true)
+            {
+                NotificationService.Notify(NotificationSeverity.Success, "成功", $"已刪除 {paths.Length} 項");
+                await Refresh();
+            }
+            else
+                NotificationService.Notify(NotificationSeverity.Warning, "警告", apiResp?.Message ?? "刪除失敗");
+        }
+        else
+            NotificationService.Notify(NotificationSeverity.Error, "錯誤", $"HTTP {(int)resp.StatusCode}");
+    }
+
+    // ===== Download =====
+    private async Task DownloadFile(FileItem item)
+    {
+        CloseContextMenu();
+        if (item.IsDirectory) return;
+        var url = $"{Http.BaseAddress}api/files/download?path={Uri.EscapeDataString(item.Path)}";
+        await JSRuntime.InvokeVoidAsync("open", url, "_blank");
+    }
+
+    private async Task DownloadSelected()
+    {
+        if (!selectedPaths.Any() || files == null) return;
+        var selectedItems = files.Where(f => selectedPaths.Contains(f.Path) && !f.IsDirectory).ToList();
+        if (!selectedItems.Any())
+        {
+            NotificationService.Notify(NotificationSeverity.Warning, "警告", "請選擇檔案（非資料夾）");
+            return;
+        }
+        foreach (var file in selectedItems)
+        {
+            var url = $"{Http.BaseAddress}api/files/download?path={Uri.EscapeDataString(file.Path)}";
+            await JSRuntime.InvokeVoidAsync("open", url, "_blank");
+            await Task.Delay(200);
+        }
+        NotificationService.Notify(NotificationSeverity.Info, "下載", $"已開啟 {selectedItems.Count} 個下載");
+    }
+
+    // ===== Upload =====
+    private void ShowUploadDialog()
+    {
+        CloseContextMenu();
+        uploadFiles.Clear();
+        uploadDialogVisible = true;
+        isUploading = false;
+        uploadProgress = 0;
+    }
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        uploadFiles = e.GetMultipleFiles().ToList();
+    }
+
+    private async Task UploadFiles()
+    {
+        if (!uploadFiles.Any()) return;
+        isUploading = true;
+        uploadProgress = 0;
+        int total = uploadFiles.Count;
+        int done = 0;
+
+        try
+        {
+            foreach (var file in uploadFiles)
+            {
+                using var content = new MultipartFormDataContent();
+                using var stream = file.OpenReadStream(maxAllowedSize: 1024L * 1024 * 1024);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                ms.Position = 0;
+                content.Add(new ByteArrayContent(ms.ToArray()), "files", file.Name);
+
+                var resp = await Http.PostAsync($"api/upload?destinationPath={Uri.EscapeDataString(currentPath)}", content);
+                if (resp.IsSuccessStatusCode)
+                    done++;
+                uploadProgress = (int)((done / (double)total) * 100);
+                StateHasChanged();
+            }
+            NotificationService.Notify(NotificationSeverity.Success, "成功", $"已上傳 {done}/{total} 個檔案");
+            uploadDialogVisible = false;
+            await Refresh();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "錯誤", ex.Message);
+        }
+        finally
+        {
+            isUploading = false;
+        }
+    }
+
+    // ===== Helpers =====
+    private string GetFileIcon(string name)
+    {
+        var ext = Path.GetExtension(name).ToLowerInvariant();
+        return ext switch
+        {
+            ".pdf" => "📄",
+            ".doc" or ".docx" => "📝",
+            ".xls" or ".xlsx" => "📊",
+            ".ppt" or ".pptx" => "📽️",
+            ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".webp" or ".svg" => "🖼️",
+            ".mp3" or ".wav" or ".flac" or ".aac" or ".ogg" => "🎵",
+            ".mp4" or ".avi" or ".mkv" or ".mov" or ".wmv" => "🎬",
+            ".zip" or ".rar" or ".7z" or ".tar" or ".gz" => "🗜️",
+            ".txt" or ".md" or ".log" => "📃",
+            ".json" or ".xml" or ".yaml" or ".yml" or ".toml" => "📋",
+            ".html" or ".css" or ".js" or ".ts" or ".cs" or ".py" or ".java" or ".c" or ".cpp" or ".h" => "💻",
+            ".exe" or ".msi" or ".dmg" or ".app" or ".deb" or ".rpm" => "⚙️",
+            ".iso" or ".img" => "💿",
+            ".ttf" or ".otf" or ".woff" or ".woff2" => "🔤",
+            _ => "📄"
+        };
     }
 
     private string FormatSize(long size)

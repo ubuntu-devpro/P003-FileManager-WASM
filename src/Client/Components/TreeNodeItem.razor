@@ -1,0 +1,43 @@
+@using FileManager.Shared.Models
+
+<li class="tree-node">
+    <div class="tree-node-row @(Node.Path == CurrentPath ? "active" : "")"
+         @onclick="@(() => OnSelect.InvokeAsync(Node.Path))">
+        <span class="tree-toggle" @onclick:stopPropagation="true" @onclick="@Toggle">
+            @(Node.Children?.Any() == true ? (Expanded ? "📂" : "📁") : "📄")
+        </span>
+        <span class="tree-label">@Node.Name</span>
+    </div>
+    @if (Expanded && Node.Children?.Any() == true)
+    {
+        <ul class="tree-children">
+            @foreach (var child in Node.Children)
+            {
+                <TreeNodeItem Node="child" CurrentPath="@CurrentPath" OnSelect="OnSelect" />
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    [Parameter]
+    public FolderTreeNode Node { get; set; } = null!;
+
+    [Parameter]
+    public string CurrentPath { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<string> OnSelect { get; set; }
+
+    private bool Expanded { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Expanded = !string.IsNullOrEmpty(CurrentPath) && CurrentPath.StartsWith(Node.Path);
+    }
+
+    private void Toggle()
+    {
+        Expanded = !Expanded;
+    }
+}

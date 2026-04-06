@@ -1,0 +1,50 @@
+@using FileManager.Shared.Models
+
+<div class="fm-context-menu @(Visible ? "visible" : "hidden")"
+     style="left: @(X)px; top: @(Y)px;">
+    @if (Item != null)
+    {
+        @if (Item.IsDirectory)
+        {
+            <div class="ctx-item" @onclick="Open">📂 開啟</div>
+        }
+        else
+        {
+            <div class="ctx-item" @onclick="Download">⬇️ 下載</div>
+        }
+        <div class="ctx-sep"></div>
+        <div class="ctx-item" @onclick="Rename">✏️ 重新命名</div>
+        <div class="ctx-item danger" @onclick="Delete">🗑️ 刪除</div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public FileItem? Item { get; set; }
+
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public int X { get; set; }
+
+    [Parameter]
+    public int Y { get; set; }
+
+    [Parameter]
+    public EventCallback OnOpen { get; set; }
+
+    [Parameter]
+    public EventCallback OnDownload { get; set; }
+
+    [Parameter]
+    public EventCallback OnRename { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    private void Open() => OnOpen.InvokeAsync();
+    private void Download() => OnDownload.InvokeAsync();
+    private void Rename() => OnRename.InvokeAsync();
+    private void Delete() => OnDelete.InvokeAsync();
+}

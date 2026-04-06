@@ -1,0 +1,63 @@
+@inject HttpClient Http
+
+<div class="folder-tree">
+    @if (isLoading)
+    {
+        <div style="padding:1rem; color:#888;">載入中...</div>
+    }
+    else if (rootNodes != null)
+    {
+        foreach (var node in rootNodes)
+        {
+            <TreeNodeItem Node="node" CurrentPath="@CurrentPath" OnSelect="HandleSelect" />
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string CurrentPath { get; set; } = "/home/devpro/data";
+
+    [Parameter]
+    public EventCallback<string> OnPathChange { get; set; }
+
+    private List<FolderTreeNode>? rootNodes;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTree();
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadTree();
+    }
+
+    private async Task LoadTree()
+    {
+        isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var resp = await Http.GetAsync("api/files/tree");
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<FolderTreeResponse>();
+                if (result?.Success == true)
+                    rootNodes = result.Nodes;
+            }
+        }
+        catch { }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleSelect(string path)
+    {
+        await OnPathChange.InvokeAsync(path);
+    }
+}
