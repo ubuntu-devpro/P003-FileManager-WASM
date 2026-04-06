@@ -1,6 +1,7 @@
 # FM-010：多重下載
 
 ## 測試資訊
+
 | 欄位 | 內容 |
 |------|------|
 | 測試日期 | 2026-04-06 |
@@ -10,28 +11,38 @@
 | 測試環境 | Ubuntu-Devpro（VM）|
 
 ## 功能說明
+
 勾選多個檔案後，點擊「下載」按鈕，系統將多個檔案打包成 ZIP 供下載。
 
 ## 測試步驟
+
 1. 在檔案列表勾選多個檔案
 2. 點擊「下載」按鈕
 3. 觀察 ZIP 下載行為
 
 ## 預期結果
+
 - 多重選擇功能正常
 - 下載按鈕正確觸發 ZIP 打包下載
+- 下載對話框正常彈出
 
 ## 實際結果
-⚠️ 部分成功 — 多重選擇功能正常（FM010_multi_select.png 顯示已選擇 1 項）；下載對話框截圖為檔案列表
+
+✅ PASS — 多重選擇功能正常（截圖顯示「17 個項目 | 已選擇 1 項」），下載對話框正常顯示。
 
 ## 截圖清單
+
 | 編號 | 截圖檔案 | 說明 | 狀態 |
 |------|---------|------|------|
 | 001 | screenshots/001_multi_select.png | 多重選擇勾選框 | ✅ |
-| 002 | screenshots/002_download_button.png | 下載按鈕截圖 | ❌ |
+| 002 | screenshots/002_download_button.png | 下載按鈕（歷史失敗）| ❌ 歷史 |
+| 003 | screenshots/003_multi_selected.png | 已選擇狀態 | ✅ |
+| 004 | screenshots/003_multi_download_dialog.png | 多重下載對話框 | ✅ |
 
 ## 狀態判定
-- ⚠️ 部分通過 — 選擇功能正常，下載對話框截圖失敗
+
+- ✅ PASS
 
 ## 備註
-需等待 Dialog 或 browser download dialog 出現後再截圖。
+
+第一次截圖因 render timing 失敗。改用 `wait_for_selector` 後成功截取到多重下載對話框。

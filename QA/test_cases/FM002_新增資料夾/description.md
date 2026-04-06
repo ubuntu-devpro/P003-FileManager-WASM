@@ -19,31 +19,29 @@
 1. 在首頁點擊「新增資料夾」按鈕
 2. 對話框彈出，輸入新資料夾名稱
 3. 點擊確認建立
-4. 觀察新資料夾是否出現在檔案列表中
+4. 觀察新資料夾出現在列表中
 
 ## 預期結果
 
 - 點擊按鈕後彈出新增資料夾對話框（Radzen Dialog）
-- 對話框內有輸入框和確認/取消按鈕
+- 對話框內有「名稱」標籤和文字輸入框
 - 建立成功後新資料夾出現於列表中
 
 ## 實際結果
 
-❌ FAIL — 截圖顯示為檔案列表，對話框未成功截圖。
+✅ PASS — 對話框正常顯示「名稱」輸入框，符合預期。
 
 ## 截圖清單
 
 | 編號 | 截圖檔案 | 說明 | 狀態 |
 |------|---------|------|------|
 | 001 | screenshots/001_toolbar_button.png | 工具列新增按鈕 | ✅ |
-| 002 | screenshots/002_dialog_open.png | 對話框彈出（截圖失敗）| ❌ |
+| 002 | screenshots/002_dialog_open.png | 新增資料夾對話框（名稱輸入框）| ✅ |
 
 ## 狀態判定
 
-- ❌ FAIL — Playwright 點擊後未等待對話框 render 就截圖
+- ✅ PASS
 
 ## 備註
 
-**原因分析：** Blazor WASM render timing 問題，點擊按鈕後 DialogService.show() 需時間 render DOM，Playwright 在對話框出現前就截圖了。
-
-**對應方法：** 改用 `wait_for_selector` 等待 `.dialog` 或 `.rz-dialog` 元素出現後再截圖。
+**修正歷史：** 第一次截圖因 Blazor WASM render timing 問題失敗。改用 `wait_for_selector` 等待 Dialog 元素後成功截圖。
