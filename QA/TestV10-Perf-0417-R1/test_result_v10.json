@@ -1,0 +1,43 @@
+{
+  "test_run": "TestV10-Perf-0417-R1",
+  "total": 5,
+  "pass": 5,
+  "fail": 0,
+  "cases": [
+    {
+      "case": "PERF-001",
+      "stage": "S10",
+      "name": "Browse 1000-file directory",
+      "status": "PASS",
+      "note": "code=200 items=1000 elapsed=15ms (threshold 3000ms)"
+    },
+    {
+      "case": "PERF-002",
+      "stage": "S10",
+      "name": "Upload 50 MB",
+      "status": "PASS",
+      "note": "code=200 landed=52.4MB elapsed=0.42s (threshold 30s)"
+    },
+    {
+      "case": "PERF-003",
+      "stage": "S10",
+      "name": "Download 200 MB streaming",
+      "status": "PASS",
+      "note": "code=200 bytes=209.7MB elapsed=0.29s server_rss_base=120MB peak=123MB growth=3MB"
+    },
+    {
+      "case": "PERF-004",
+      "stage": "S10",
+      "name": "Deep tree 60 levels",
+      "status": "PASS",
+      "note": "code=200 elapsed=0.01s (threshold 5s)"
+    },
+    {
+      "case": "PERF-005",
+      "stage": "S10",
+      "name": "100 sequential GET calls",
+      "status": "PASS",
+      "note": "all_200=True elapsed=0.16s rss_base=123MB peak=128MB growth=5MB"
+    }
+  ]
+}

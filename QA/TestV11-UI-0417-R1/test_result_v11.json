@@ -1,0 +1,64 @@
+{
+  "test_run": "TestV11-UI-0417-R1",
+  "total": 8,
+  "pass": 8,
+  "fail": 0,
+  "cases": [
+    {
+      "case": "UI-001",
+      "stage": "S11",
+      "name": "Escape 關閉 dialog",
+      "status": "PASS",
+      "note": "dialog_closed=True"
+    },
+    {
+      "case": "UI-002",
+      "stage": "S11",
+      "name": "重新整理後不留 orphan dialog",
+      "status": "PASS",
+      "note": "orphan_dialog=False"
+    },
+    {
+      "case": "UI-003",
+      "stage": "S11",
+      "name": "快速雙擊不重複觸發 API",
+      "status": "PASS",
+      "note": "api_calls_fired=1 (expect 1-2)"
+    },
+    {
+      "case": "UI-004",
+      "stage": "S11",
+      "name": "全選取消全選 selectedPaths 清空",
+      "status": "PASS",
+      "note": "rows=42 after_select=42 after_deselect=0"
+    },
+    {
+      "case": "UI-005",
+      "stage": "S11",
+      "name": "右鍵選單外點擊關閉",
+      "status": "PASS",
+      "note": "menu_was_open=True menu_now_closed=True"
+    },
+    {
+      "case": "UI-006",
+      "stage": "S11",
+      "name": "上傳dialog取消無殘留",
+      "status": "PASS",
+      "note": "was_open=True dialog_gone=True progress_gone=True"
+    },
+    {
+      "case": "UI-007",
+      "stage": "S11",
+      "name": "網路斷線不白畫面",
+      "status": "PASS",
+      "note": "has_content=True has_error_msg=True"
+    },
+    {
+      "case": "UI-008",
+      "stage": "S11",
+      "name": "Token過期跳登入頁",
+      "status": "PASS",
+      "note": "url=http://localhost:5001/ login_form=True"
+    }
+  ]
+}

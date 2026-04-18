@@ -1,0 +1,22 @@
+@inherits ErrorBoundaryBase
+@inject ClientLogService ClientLog
+
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else
+{
+    <div style="padding:2rem;color:#c0392b;font-family:monospace;background:#fdf2f2;min-height:100vh">
+        <h3>發生錯誤</h3>
+        <pre style="white-space:pre-wrap;word-break:break-all">@CurrentException.Message</pre>
+        <button @onclick="Recover" style="margin-top:1rem;padding:0.5rem 1rem;cursor:pointer">重試</button>
+    </div>
+}
+
+@code {
+    protected override async Task OnErrorAsync(Exception ex)
+    {
+        await ClientLog.ErrorAsync(ex.Message, "ErrorBoundary", ex.StackTrace);
+    }
+}

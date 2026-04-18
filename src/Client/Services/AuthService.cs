@@ -16,6 +16,8 @@ public interface IAuthService
 {
     AuthState State { get; }
     Task<bool> LoginAsync(string email, string password);
+    Task<(bool ok, string message)> RequestOtpAsync(string email);
+    Task<bool> VerifyOtpAsync(string email, string code);
     Task LogoutAsync();
     Task CheckSessionAsync();
     event Action? StateChanged;
@@ -92,6 +94,38 @@ public class AuthService : IAuthService
         }
     }
 
+    public async Task<(bool ok, string message)> RequestOtpAsync(string email)
+    {
+        try
+        {
+            var resp = await _http.PostAsJsonAsync("api/auth/request-otp", new { email });
+            var json = await resp.Content.ReadFromJsonAsync<OtpResult>();
+            return (resp.IsSuccessStatusCode, json?.Message ?? "發生錯誤");
+        }
+        catch { return (false, "發生錯誤"); }
+    }
+
+    public async Task<bool> VerifyOtpAsync(string email, string code)
+    {
+        try
+        {
+            var resp = await _http.PostAsJsonAsync("api/auth/verify-otp", new { email, code });
+            if (!resp.IsSuccessStatusCode) return false;
+            var json = await resp.Content.ReadFromJsonAsync<LoginResult>();
+            if (json == null || !json.Success || string.IsNullOrEmpty(json.Token)) return false;
+            State.Token = json.Token;
+            State.Email = json.Email;
+            State.IsAdmin = json.IsAdmin;
+            State.Domain = json.Domain;
+            await _js.InvokeVoidAsync("localStorage.setItem", "fm_token", json.Token);
+            _http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", json.Token);
+            StateChanged?.Invoke();
+            return true;
+        }
+        catch { return false; }
+    }
+
     public async Task LogoutAsync()
     {
         try { await _http.PostAsync("api/auth/logout", null); } catch { }
@@ -100,6 +134,8 @@ public class AuthService : IAuthService
         _http.DefaultRequestHeaders.Authorization = null;
         StateChanged?.Invoke();
     }
+
+    private class OtpResult { public string? Message { get; set; } }
 
     private class LoginResult
     {

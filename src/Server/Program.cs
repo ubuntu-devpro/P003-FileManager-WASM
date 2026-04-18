@@ -8,8 +8,18 @@ const string SecretKey = "P003-FileManager-WASM-SecretKey-2026-04-06-very-long-k
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Kestrel: allow uploads up to 500 MB
+builder.WebHost.ConfigureKestrel(o =>
+{
+    o.Limits.MaxRequestBodySize = 500L * 1024 * 1024;
+});
+
 // Add services
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.MaxDepth = 256;
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // JWT Authentication
@@ -34,16 +44,18 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazor", policy =>
     {
-        policy.WithOrigins("http://localhost:5000", "http://localhost:5001", "http://localhost:5002")
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
     });
 });
 
 // Services
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddSingleton<IFileService, FileService>();
+builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddSingleton<IOtpService, OtpService>();
+builder.Services.AddHostedService(p => (OtpService)p.GetRequiredService<IOtpService>());
 
 var app = builder.Build();
 

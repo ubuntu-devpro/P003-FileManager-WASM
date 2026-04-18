@@ -1,0 +1,149 @@
+{
+  "test_run": "TestV7-Security-JWT-0417-R1",
+  "total": 20,
+  "pass": 16,
+  "fail": 0,
+  "known": 4,
+  "cases": [
+    {
+      "case": "SEC-001",
+      "stage": "S7",
+      "name": "URL-encoded ../ traversal",
+      "status": "PASS",
+      "note": "code=403, expected=[403, 400]"
+    },
+    {
+      "case": "SEC-002",
+      "stage": "S7",
+      "name": "Double-encoded ../ traversal",
+      "status": "PASS",
+      "note": "code=403, expected=[403, 400]"
+    },
+    {
+      "case": "SEC-003",
+      "stage": "S7",
+      "name": "Backslash ..\\ traversal",
+      "status": "PASS",
+      "note": "code=403, expected=[403, 400]"
+    },
+    {
+      "case": "SEC-004",
+      "stage": "S7",
+      "name": "Null-byte injection",
+      "status": "PASS",
+      "note": "code=400, expected=[403, 400, 404]"
+    },
+    {
+      "case": "SEC-005",
+      "stage": "S7",
+      "name": "Ultra-long path (4096 chars)",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "SEC-006",
+      "stage": "S7",
+      "name": "Folder name contains '../'",
+      "status": "PASS",
+      "note": "code=400, expected=400"
+    },
+    {
+      "case": "SEC-007",
+      "stage": "S7",
+      "name": "Rename newName contains path separator",
+      "status": "PASS",
+      "note": "code=400, expected=400"
+    },
+    {
+      "case": "SEC-008",
+      "stage": "S7",
+      "name": "Upload filename with null byte",
+      "status": "PASS",
+      "note": "code=200, landed_exe=[]"
+    },
+    {
+      "case": "SEC-009",
+      "stage": "S7",
+      "name": "Double extension malware.exe.txt",
+      "status": "PASS",
+      "note": "code=200, landed=True (extension check only on final .ext — acceptable)"
+    },
+    {
+      "case": "SEC-010",
+      "stage": "S7",
+      "name": "Upload overwrites existing file silently",
+      "status": "KNOWN",
+      "note": "code=200, silent_overwrite=True (v3 §8 #3 — UploadController File.Create)"
+    },
+    {
+      "case": "SEC-011",
+      "stage": "S7",
+      "name": "johnny downloads /etc/passwd",
+      "status": "PASS",
+      "note": "code=403, leaked_passwd=False"
+    },
+    {
+      "case": "SEC-012",
+      "stage": "S7",
+      "name": "johnny downloads others.com file",
+      "status": "PASS",
+      "note": "code=403, content_leaked=False"
+    },
+    {
+      "case": "SEC-013",
+      "stage": "S7",
+      "name": "Download symlink → /etc/passwd",
+      "status": "KNOWN",
+      "note": "code=200, passwd_leaked=True (symlink resolution not blocked — known gap)"
+    },
+    {
+      "case": "SEC-014",
+      "stage": "S7",
+      "name": "CORS rogue Origin",
+      "status": "KNOWN",
+      "note": "allow_any_or_rogue=True (Program.cs AllowAnyOrigin — CSRF risk)"
+    },
+    {
+      "case": "JWT-001",
+      "stage": "S12",
+      "name": "Tampered payload (role=Admin)",
+      "status": "PASS",
+      "note": "code=401, expected=401"
+    },
+    {
+      "case": "JWT-002",
+      "stage": "S12",
+      "name": "Expired token (exp in past)",
+      "status": "PASS",
+      "note": "code=401, expected=401"
+    },
+    {
+      "case": "JWT-003",
+      "stage": "S12",
+      "name": "Different issuer",
+      "status": "PASS",
+      "note": "code=401, expected=401"
+    },
+    {
+      "case": "JWT-004",
+      "stage": "S12",
+      "name": "Different audience",
+      "status": "PASS",
+      "note": "code=401, expected=401"
+    },
+    {
+      "case": "JWT-005",
+      "stage": "S12",
+      "name": "Empty-string token",
+      "status": "PASS",
+      "note": "code=401, expected=401"
+    },
+    {
+      "case": "JWT-006",
+      "stage": "S12",
+      "name": "Token valid after logout (stateless)",
+      "status": "KNOWN",
+      "note": "code=200, still_works=True (no blacklist — documented limitation)"
+    }
+  ]
+}

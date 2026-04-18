@@ -1,18 +1,18 @@
 using System.IO;
 using System.Security.Cryptography;
 using FileManager.Shared.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace FileManager.Server.Services;
 
 public class FileService : IFileService
 {
-    // Hardcoded root - no path traversal possible
-    private static readonly string RootPath = "/home/devpro/data";
+    private readonly string RootPath;
     private static readonly string[] RestrictedExtensions = { ".exe", ".dll", ".config" };
 
-    public FileService()
+    public FileService(IConfiguration configuration)
     {
-        // Ensure root directory exists
+        RootPath = configuration["FileStorage:RootPath"] ?? "/home/devpro/data";
         Directory.CreateDirectory(RootPath);
     }
 
@@ -105,9 +105,18 @@ public class FileService : IFileService
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(name))
+                return new(false, "資料夾名稱不可為空");
+
+            if (name.Contains("..") || name.Contains('/') || name.Contains('\\'))
+                return new(false, "資料夾名稱包含不合法字元");
+
             var newPath = Path.Combine(path, name);
             if (!IsPathAllowed(newPath))
                 return new(false, "路徑存取被拒絕");
+
+            if (Directory.Exists(newPath))
+                return new(false, "資料夾已存在");
 
             await Task.Run(() => Directory.CreateDirectory(newPath));
             return new(true, "資料夾已建立");
@@ -122,6 +131,12 @@ public class FileService : IFileService
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(newName))
+                return new(false, "新名稱不可為空");
+
+            if (newName.Contains("..") || newName.Contains('/') || newName.Contains('\\'))
+                return new(false, "新名稱包含不合法字元");
+
             if (!IsPathAllowed(currentPath))
                 return new(false, "路徑存取被拒絕");
 

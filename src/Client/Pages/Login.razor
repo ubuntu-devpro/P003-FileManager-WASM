@@ -7,99 +7,157 @@
 <div class="login-container">
     <div class="login-card">
         <h1>📁 檔案管理器</h1>
-        <h2>登入</h2>
+        <h2>@(step == Step.Otp ? "輸入驗證碼" : "登入")</h2>
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
             <div class="error-msg">@errorMessage</div>
         }
+        @if (!string.IsNullOrEmpty(infoMessage))
+        {
+            <div class="info-msg">@infoMessage</div>
+        }
 
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" @bind="email" placeholder="admin@devpro.com.tw" />
-        </div>
+        @if (step == Step.Email)
+        {
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" @bind="email" placeholder="you@devpro.com.tw" @onkeyup="OnKeyUpEmail" />
+            </div>
 
-        <div class="form-group">
-            <label>密碼</label>
-            <input type="password" @bind="password" placeholder="••••••" @onkeyup="OnKeyUp" />
-        </div>
+            <button class="login-btn" @onclick="DoRequestOtp" disabled="@isLoading">
+                @(isLoading ? "發送中..." : "發送驗證碼")
+            </button>
 
-        <button class="login-btn" @onclick="DoLogin" disabled="@isLoading">
-            @(isLoading ? "登入中..." : "登入")
-        </button>
+            <div class="divider">或使用密碼登入（測試用）</div>
 
-        <div class="hint">
-            <p>測試帳號：</p>
-            <p>• admin@devpro.com.tw / admin123（Admin）</p>
-            <p>• johnny@sinopac.com / johnny123（一般使用者）</p>
-        </div>
+            <div class="form-group">
+                <label>密碼</label>
+                <input type="password" @bind="password" placeholder="••••••" @onkeyup="OnKeyUpPassword" />
+            </div>
+
+            <button class="login-btn secondary" @onclick="DoPasswordLogin" disabled="@isLoading">
+                @(isLoading ? "登入中..." : "密碼登入")
+            </button>
+        }
+
+        @if (step == Step.Otp)
+        {
+            <div class="otp-email">驗證碼已發送至 <strong>@email</strong></div>
+
+            <div class="form-group">
+                <label>6 位數驗證碼</label>
+                <input type="text" inputmode="numeric" maxlength="6" @bind="otpCode"
+                       placeholder="000000" class="otp-input" @onkeyup="OnKeyUpOtp" />
+            </div>
+
+            <button class="login-btn" @onclick="DoVerifyOtp" disabled="@isLoading">
+                @(isLoading ? "驗證中..." : "登入")
+            </button>
+
+            <button class="link-btn" @onclick="BackToEmail" disabled="@(resendCountdown > 0 || isLoading)">
+                @(resendCountdown > 0 ? $"重新發送（{resendCountdown}s）" : "← 重新發送")
+            </button>
+        }
     </div>
 </div>
 
 @code {
+    private enum Step { Email, Otp }
+    private Step step = Step.Email;
+
     private string email = "";
     private string password = "";
+    private string otpCode = "";
     private string? errorMessage;
+    private string? infoMessage;
     private bool isLoading;
+    private int resendCountdown;
+    private System.Threading.Timer? countdownTimer;
 
     protected override async Task OnInitializedAsync()
     {
-        // If already logged in, go to home
         await Auth.CheckSessionAsync();
         if (Auth.State.IsAuthenticated)
             Nav.NavigateTo("/");
     }
 
-    private async Task DoLogin()
+    private async Task DoRequestOtp()
     {
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-        {
-            errorMessage = "請輸入 Email 和密碼";
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(email)) { errorMessage = "請輸入 Email"; return; }
+        isLoading = true; errorMessage = null; infoMessage = null;
 
-        isLoading = true;
-        errorMessage = null;
-
-        var ok = await Auth.LoginAsync(email, password);
-
+        var (ok, msg) = await Auth.RequestOtpAsync(email);
         isLoading = false;
 
         if (ok)
         {
-            Nav.NavigateTo("/");
+            step = Step.Otp;
+            infoMessage = msg;
+            StartResendCountdown();
         }
         else
         {
-            errorMessage = "帳號或密碼錯誤";
+            errorMessage = msg;
         }
     }
 
-    private async Task OnKeyUp(KeyboardEventArgs e)
+    private async Task DoVerifyOtp()
     {
-        if (e.Key == "Enter")
-            await DoLogin();
+        if (string.IsNullOrWhiteSpace(otpCode)) { errorMessage = "請輸入驗證碼"; return; }
+        isLoading = true; errorMessage = null;
+
+        var ok = await Auth.VerifyOtpAsync(email, otpCode);
+        isLoading = false;
+
+        if (ok) Nav.NavigateTo("/");
+        else errorMessage = "驗證碼錯誤或已過期";
     }
+
+    private async Task DoPasswordLogin()
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            errorMessage = "請輸入 Email 和密碼"; return;
+        }
+        isLoading = true; errorMessage = null;
+        var ok = await Auth.LoginAsync(email, password);
+        isLoading = false;
+        if (ok) Nav.NavigateTo("/");
+        else errorMessage = "帳號或密碼錯誤";
+    }
+
+    private void BackToEmail()
+    {
+        step = Step.Email; otpCode = ""; errorMessage = null; infoMessage = null;
+        countdownTimer?.Dispose(); resendCountdown = 0;
+    }
+
+    private void StartResendCountdown()
+    {
+        resendCountdown = 60;
+        countdownTimer?.Dispose();
+        countdownTimer = new System.Threading.Timer(_ =>
+        {
+            if (resendCountdown > 0) resendCountdown--;
+            InvokeAsync(StateHasChanged);
+        }, null, 1000, 1000);
+    }
+
+    private async Task OnKeyUpEmail(KeyboardEventArgs e)   { if (e.Key == "Enter") await DoRequestOtp(); }
+    private async Task OnKeyUpPassword(KeyboardEventArgs e) { if (e.Key == "Enter") await DoPasswordLogin(); }
+    private async Task OnKeyUpOtp(KeyboardEventArgs e)     { if (e.Key == "Enter") await DoVerifyOtp(); }
 }
 
 <style>
 .login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 }
-
 .login-card {
-    background: white;
-    padding: 2rem 2.5rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    width: 360px;
-    text-align: center;
+    background: white; padding: 2rem 2.5rem; border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3); width: 360px; text-align: center;
 }
-
 .login-card h1 { font-size: 1.5rem; margin: 0 0 0.25rem; color: #1a1a2e; }
 .login-card h2 { font-size: 1.1rem; color: #666; margin: 0 0 1.5rem; font-weight: normal; }
 
@@ -111,22 +169,35 @@
 }
 .form-group input:focus { outline: none; border-color: #4F81BD; }
 
+.otp-input { font-size: 1.5rem; letter-spacing: 0.5rem; text-align: center; font-weight: bold; }
+.otp-email { font-size: 0.85rem; color: #555; margin-bottom: 1.2rem; }
+
 .login-btn {
-    width: 100%; padding: 0.75rem; background: #4F81BD;
-    color: white; border: none; border-radius: 6px;
-    font-size: 1rem; cursor: pointer; margin-top: 0.5rem;
+    width: 100%; padding: 0.75rem; background: #4F81BD; color: white;
+    border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; margin-top: 0.25rem;
 }
 .login-btn:hover { background: #3a6291; }
 .login-btn:disabled { background: #ccc; cursor: not-allowed; }
+.login-btn.secondary { background: #6c757d; margin-top: 0.5rem; }
+.login-btn.secondary:hover { background: #545b62; }
 
+.link-btn {
+    width: 100%; background: none; border: none; color: #4F81BD;
+    font-size: 0.85rem; cursor: pointer; margin-top: 0.75rem; padding: 0.25rem;
+}
+.link-btn:hover { text-decoration: underline; }
+.link-btn:disabled { color: #aaa; cursor: not-allowed; text-decoration: none; }
+
+.divider {
+    font-size: 0.78rem; color: #aaa; margin: 1.2rem 0 1rem;
+    border-top: 1px solid #eee; padding-top: 1rem;
+}
 .error-msg {
     background: #fdf2f2; color: #c0392b; padding: 0.75rem;
     border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem;
 }
-
-.hint {
-    margin-top: 1.5rem; font-size: 0.78rem; color: #888;
-    text-align: left; border-top: 1px solid #eee; padding-top: 1rem;
+.info-msg {
+    background: #f0f7ff; color: #2471a3; padding: 0.75rem;
+    border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem;
 }
-.hint p { margin: 0.25rem 0; }
 </style>

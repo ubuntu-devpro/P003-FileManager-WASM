@@ -1,7 +1,8 @@
 @using FileManager.Shared.Models
 
 <div class="fm-context-menu @(Visible ? "visible" : "hidden")"
-     style="left: @(X)px; top: @(Y)px;">
+     style="left: @(X)px; top: @(Y)px;"
+     @onclick:stopPropagation="true">
     @if (Item != null)
     {
         @if (Item.IsDirectory)

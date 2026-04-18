@@ -1,0 +1,659 @@
+{
+  "date": "2026-04-17 21:20:02",
+  "test_run": "TestV5-Full-0417-R1",
+  "total": 54,
+  "passed": 54,
+  "failed": 0,
+  "stage_results": {
+    "S1": true,
+    "S2": true,
+    "S3": true,
+    "S4": true,
+    "S5": true,
+    "S6": true
+  },
+  "cases": [
+    {
+      "case_id": "FA001-A-Admin",
+      "name": "admin@devpro.com.tw login",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "",
+      "details": {
+        "http_code": 200,
+        "jwt_role_correct": true,
+        "jwt_domain_correct": true,
+        "jwt_claims": {
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": "admin@devpro.com.tw",
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": "Admin",
+          "domain": "devpro.com.tw",
+          "exp": 1776518064,
+          "iss": "FileManager.Server",
+          "aud": "FileManager.Client"
+        }
+      }
+    },
+    {
+      "case_id": "FA001-B-Johnny",
+      "name": "johnny@sinopac.com login",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "",
+      "details": {
+        "http_code": 200,
+        "jwt_role_correct": true,
+        "jwt_domain_correct": true,
+        "jwt_claims": {
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": "johnny@sinopac.com",
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": "User",
+          "domain": "sinopac.com",
+          "exp": 1776518078,
+          "iss": "FileManager.Server",
+          "aud": "FileManager.Client"
+        }
+      }
+    },
+    {
+      "case_id": "FA001-C-User",
+      "name": "user@others.com login",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "",
+      "details": {
+        "http_code": 200,
+        "jwt_role_correct": true,
+        "jwt_domain_correct": true,
+        "jwt_claims": {
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": "user@others.com",
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": "User",
+          "domain": "others.com",
+          "exp": 1776518094,
+          "iss": "FileManager.Server",
+          "aud": "FileManager.Client"
+        }
+      }
+    },
+    {
+      "case_id": "FA002-A-Admin",
+      "name": "admin@devpro.com.tw visible scope",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "",
+      "details": {
+        "visible_items": [
+          "QA_V5_1775906861_renamed",
+          "CA_test_1775910302",
+          "QA_V5_UI_1775910625",
+          "QA_V5_UI_1775906865",
+          "CA_AdminOnly_1775910771",
+          "QA_V5_UI_1775911149",
+          "QA_Recording_1775913896",
+          "sinopac.com",
+          "others.com",
+          "QA_V5_UI_1775911956",
+          "QA_Test_v2_1775494105",
+          "CA_test_1775910432",
+          "QA_V5_1775910621_renamed",
+          "QA_V5_1775906339_renamed",
+          "CA_AdminOnly_1775907011",
+          "TestMove_Source",
+          "qa_fixed",
+          "QA_V5_1775911145_renamed",
+          "QA_Renamed_1775494115",
+          "QA_Test_R2_1775890167",
+          "QA_Playwright_R2_Test",
+          "CA_AdminOnly_1775911295",
+          "QA_Test_v2_1775494719",
+          "devpro.com.tw",
+          "qa_test_dev",
+          "CA_AdminOnly_1775906467",
+          "QA_V5_1775911952_renamed",
+          "TestMove_Target",
+          "QA_Test_v2_1775884309",
+          "users",
+          "TestDownload.txt",
+          "qa_v5_upload.txt",
+          "MultiUpload_2.txt",
+          "UploadTest_Simple.txt",
+          "MultiUpload_1.txt",
+          "TestRename_Dest.txt",
+          "qa_download_test.txt",
+          "empty_test.txt",
+          "upload_test.txt"
+        ],
+        "http_code": 200
+      }
+    },
+    {
+      "case_id": "FA002-B-Johnny",
+      "name": "johnny@sinopac.com visible scope",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "",
+      "details": {
+        "visible_items": [
+          "CA_ForJohnny_1775910783",
+          "CA_ForJohnny_1775906504",
+          "CA_ForJohnny_1775911308",
+          "CA_ForJohnny_1775907024",
+          "ca003_johnny_file.txt",
+          "confidential.txt",
+          "test.txt",
+          "test_upload_verify.txt",
+          "johnny_upload_test.txt"
+        ],
+        "http_code": 200
+      }
+    },
+    {
+      "case_id": "FA002-C-User",
+      "name": "user@others.com visible scope",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "",
+      "details": {
+        "visible_items": [
+          "hacked",
+          "test.txt"
+        ],
+        "http_code": 200
+      }
+    },
+    {
+      "case_id": "FA003",
+      "name": "Logout",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FA004-A",
+      "name": "Session: valid token",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=200, expected=[200]"
+    },
+    {
+      "case_id": "FA004-B",
+      "name": "Session: invalid token",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=401, expected=[401]"
+    },
+    {
+      "case_id": "FA004-C",
+      "name": "Session: no token files API",
+      "stage": "S1",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=401, expected=[401]"
+    },
+    {
+      "case_id": "MT001-A",
+      "name": "johnny access root",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=200",
+      "details": {
+        "http_code": 200,
+        "items_count": 9,
+        "has_cross_tenant_data": false
+      }
+    },
+    {
+      "case_id": "MT001-B",
+      "name": "johnny access others.com",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=403",
+      "details": {
+        "http_code": 403,
+        "items_count": 0,
+        "has_cross_tenant_data": false
+      }
+    },
+    {
+      "case_id": "MT001-C",
+      "name": "johnny path traversal",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=403",
+      "details": {
+        "http_code": 403,
+        "items_count": 0,
+        "has_cross_tenant_data": false
+      }
+    },
+    {
+      "case_id": "MT001-D",
+      "name": "johnny access /etc/passwd",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=403",
+      "details": {
+        "http_code": 403,
+        "items_count": 0,
+        "has_cross_tenant_data": false
+      }
+    },
+    {
+      "case_id": "MT002-A",
+      "name": "johnny upload to others.com",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=403",
+      "details": {
+        "http_code": 403,
+        "response": "{\"success\":false,\"message\":\"存取被拒絕\",\"totalUploaded\":0}"
+      }
+    },
+    {
+      "case_id": "MT002-B",
+      "name": "johnny create folder in others.com",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=403",
+      "details": {
+        "http_code": 403,
+        "response": "{\"success\":false,\"message\":\"存取被拒絕\"}"
+      }
+    },
+    {
+      "case_id": "MT002-C",
+      "name": "johnny delete in others.com",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=403",
+      "details": {
+        "http_code": 403,
+        "response": "{\"success\":false,\"message\":\"存取被拒絕\"}"
+      }
+    },
+    {
+      "case_id": "MT002-D",
+      "name": "johnny move to others.com",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=403",
+      "details": {
+        "http_code": 403,
+        "response": "{\"success\":false,\"message\":\"目標路徑存取被拒絕\"}"
+      }
+    },
+    {
+      "case_id": "MT003-A",
+      "name": "johnny download from others.com",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case_id": "MT003-B",
+      "name": "johnny search isolation",
+      "stage": "S2",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "found_others=False",
+      "details": {
+        "results": []
+      }
+    },
+    {
+      "case_id": "FM001",
+      "name": "Folder Browse",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "",
+      "details": {
+        "items_count": 39
+      }
+    },
+    {
+      "case_id": "FM002",
+      "name": "Create Folder",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "api_verified=True",
+      "details": {
+        "folder": "QA_V5_1776431787",
+        "verified": true
+      }
+    },
+    {
+      "case_id": "FM003",
+      "name": "Rename",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM004",
+      "name": "Move File",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM005",
+      "name": "Delete",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM006",
+      "name": "Single Upload",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "verified=True"
+    },
+    {
+      "case_id": "FM007",
+      "name": "Multi Upload",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM008",
+      "name": "Drag Upload (element check)",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM009",
+      "name": "Single Download",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM010",
+      "name": "Multi Download",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM011",
+      "name": "Search",
+      "stage": "S3",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM001-U",
+      "name": "Johnny browse own domain",
+      "stage": "S4",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "FM002-U",
+      "name": "Johnny create folder",
+      "stage": "S4",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "verified=True",
+      "details": {
+        "folder": "johnny_folder_1776431933"
+      }
+    },
+    {
+      "case_id": "FM003-U",
+      "name": "Johnny rename in own domain",
+      "stage": "S4",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case_id": "FM005-U",
+      "name": "Johnny delete in own domain",
+      "stage": "S4",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case_id": "FM006-U",
+      "name": "Johnny upload to own domain",
+      "stage": "S4",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "verified=True"
+    },
+    {
+      "case_id": "FM009-U",
+      "name": "Johnny download from own domain",
+      "stage": "S4",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case_id": "FM011-U",
+      "name": "Johnny search (scoped)",
+      "stage": "S4",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "has_cross_tenant=False",
+      "details": {
+        "results_count": 3
+      }
+    },
+    {
+      "case_id": "CA001",
+      "name": "Admin root folder invisible to johnny",
+      "stage": "S5",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "johnny_sees=False"
+    },
+    {
+      "case_id": "CA002",
+      "name": "Admin sinopac.com folder visible to johnny",
+      "stage": "S5",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "johnny_sees=True"
+    },
+    {
+      "case_id": "CA003",
+      "name": "Johnny upload visible to admin",
+      "stage": "S5",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "admin_sees=True"
+    },
+    {
+      "case_id": "CA004",
+      "name": "Johnny file invisible to user@others.com",
+      "stage": "S5",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "user_sees=False, code=403"
+    },
+    {
+      "case_id": "NE001-A",
+      "name": "wrong password",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=401, got_token=False"
+    },
+    {
+      "case_id": "NE001-B",
+      "name": "nonexistent account",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=401, got_token=False"
+    },
+    {
+      "case_id": "NE001-C",
+      "name": "empty credentials",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=400, got_token=False"
+    },
+    {
+      "case_id": "NE001-D",
+      "name": "SQL injection",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=401, got_token=False"
+    },
+    {
+      "case_id": "NE001-A-UI",
+      "name": "Wrong password UI",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "case_id": "NE002-A",
+      "name": "duplicate folder name",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=400"
+    },
+    {
+      "case_id": "NE002-B",
+      "name": "rename to empty string",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=400"
+    },
+    {
+      "case_id": "NE002-C",
+      "name": "rename with path traversal",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=400"
+    },
+    {
+      "case_id": "NE002-D",
+      "name": "delete nonexistent",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case_id": "NE002-G",
+      "name": "search empty query",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case_id": "NE002-E",
+      "name": "upload .exe blocked",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case_id": "NE002-F",
+      "name": "upload empty file",
+      "stage": "S6",
+      "api": true,
+      "ui": true,
+      "status": "PASS",
+      "note": "code=200"
+    }
+  ]
+}

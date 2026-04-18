@@ -1,0 +1,205 @@
+{
+  "test_run": "TestV8-Tenant-Matrix-0417-R1",
+  "total": 28,
+  "pass": 28,
+  "fail": 0,
+  "known": 0,
+  "cases": [
+    {
+      "case": "MTX-A01",
+      "group": "A",
+      "name": "johnny browse devpro.com.tw",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-A02",
+      "group": "A",
+      "name": "johnny tree devpro.com.tw",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-A03",
+      "group": "A",
+      "name": "johnny create folder in devpro.com.tw",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-A04",
+      "group": "A",
+      "name": "johnny rename file in devpro.com.tw",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-A05",
+      "group": "A",
+      "name": "johnny move FROM devpro TO sinopac",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-A06",
+      "group": "A",
+      "name": "johnny delete file in devpro.com.tw",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-A07",
+      "group": "A",
+      "name": "johnny upload to devpro.com.tw",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-A08",
+      "group": "A",
+      "name": "johnny download from devpro.com.tw",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-A09",
+      "group": "A",
+      "name": "johnny search in devpro.com.tw",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-B01",
+      "group": "B",
+      "name": "user browse root (clamped)",
+      "status": "PASS",
+      "note": "code=200 names=['tenantmtx', 'hacked', 'test.txt']"
+    },
+    {
+      "case": "MTX-B02",
+      "group": "B",
+      "name": "user browse sinopac.com",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-B03",
+      "group": "B",
+      "name": "user browse devpro.com.tw",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-B04",
+      "group": "B",
+      "name": "user tree sinopac.com",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-B05",
+      "group": "B",
+      "name": "user upload to sinopac.com",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-B06",
+      "group": "B",
+      "name": "user delete in sinopac.com",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-B07",
+      "group": "B",
+      "name": "user rename in sinopac.com",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-B08",
+      "group": "B",
+      "name": "user move FROM others.com TO sinopac.com (dest cross)",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-B09",
+      "group": "B",
+      "name": "user download sinopac.com file",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-D01",
+      "group": "D",
+      "name": "johnny move FROM others.com TO sinopac (source cross)",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-D02",
+      "group": "D",
+      "name": "johnny mixed-source move (own + foreign)",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-E01",
+      "group": "E",
+      "name": "johnny rename file in others.com",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-F01",
+      "group": "F",
+      "name": "johnny rename sinopac.com (own root)",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-F02",
+      "group": "F",
+      "name": "johnny delete sinopac.com (own root)",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-F03",
+      "group": "F",
+      "name": "johnny move sinopac.com folder to /data root",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-G01",
+      "group": "G",
+      "name": "johnny traversal sinopac/../others",
+      "status": "PASS",
+      "note": "code=403"
+    },
+    {
+      "case": "MTX-H01",
+      "group": "H",
+      "name": "admin browse all 3 domains",
+      "status": "PASS",
+      "note": "all domains browsable"
+    },
+    {
+      "case": "MTX-H02",
+      "group": "H",
+      "name": "admin download sinopac marker",
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case": "MTX-H03",
+      "group": "H",
+      "name": "admin move sinopac → devpro",
+      "status": "PASS",
+      "note": "code=200"
+    }
+  ]
+}

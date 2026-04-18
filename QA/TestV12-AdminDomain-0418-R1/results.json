@@ -1,0 +1,74 @@
+{
+  "test_run": "TestV12-AdminDomain-0418-R1",
+  "timestamp": "2026-04-18 17:18:12",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "cases": [
+    {
+      "id": "AD-001",
+      "name": "AdminEmails 命中 → Admin",
+      "status": "PASS",
+      "note": "http=200, isAdmin=True (expected=True), jwt_role=Admin",
+      "details": {
+        "http_code": 200,
+        "login_success": true,
+        "is_admin": true,
+        "jwt_role": "Admin",
+        "reason": "email 在 AdminEmails 清單內"
+      }
+    },
+    {
+      "id": "AD-002",
+      "name": "AdminDomains 命中（非 AdminEmails）→ Admin",
+      "status": "PASS",
+      "note": "http=200, isAdmin=True (expected=True), jwt_role=Admin",
+      "details": {
+        "http_code": 200,
+        "login_success": true,
+        "is_admin": true,
+        "jwt_role": "Admin",
+        "reason": "domain devpro.com.tw 在 AdminDomains，但 email 不在 AdminEmails"
+      }
+    },
+    {
+      "id": "AD-003",
+      "name": "AllowedDomains 但非 AdminDomains → User",
+      "status": "PASS",
+      "note": "http=200, isAdmin=False (expected=False), jwt_role=User",
+      "details": {
+        "http_code": 200,
+        "login_success": true,
+        "is_admin": false,
+        "jwt_role": "User",
+        "reason": "msn.com 在 AllowedEmailDomains 但不在 AdminDomains"
+      }
+    },
+    {
+      "id": "AD-004",
+      "name": "不在 AllowedEmailDomains → 拒絕登入",
+      "status": "PASS",
+      "note": "http=401, login=rejected ✓",
+      "details": {
+        "http_code": 401,
+        "login_success": false,
+        "is_admin": false,
+        "jwt_role": "",
+        "reason": "sinopac.com 不在 AllowedEmailDomains"
+      }
+    },
+    {
+      "id": "AD-005",
+      "name": "AdminDomains 大小寫不分 → Admin",
+      "status": "PASS",
+      "note": "http=200, isAdmin=True (expected=True), jwt_role=Admin",
+      "details": {
+        "http_code": 200,
+        "login_success": true,
+        "is_admin": true,
+        "jwt_role": "Admin",
+        "reason": "domain 比對應 case-insensitive"
+      }
+    }
+  ]
+}

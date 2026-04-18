@@ -43,12 +43,12 @@
                 <RadzenButton Icon="download" Text="下載" Disabled="@(!HasSelectedFiles)" Click="@DownloadSelected" Size="ButtonSize.Small" />
                 <RadzenButton Icon="delete" Text="刪除" Disabled="@(!HasSelectedFiles)" ButtonStyle="ButtonStyle.Danger" Click="@DeleteSelected" Size="ButtonSize.Small" />
                 <RadzenButton Icon="drive_file_move" Text="移動" Disabled="@(!HasSelectedFiles)" Click="@ShowMoveDialog" Size="ButtonSize.Small" />
-                <RadzenTextBox @bind-Value="searchQuery" Placeholder="搜尋..." Change="@OnSearch" Style="width:180px; margin-left:auto;" />
+                <RadzenTextBox @bind-Value="searchQuery" Placeholder="搜尋 Search..." Change="@OnSearch" Style="width:180px; margin-left:auto;" />
             </div>
 
             <!-- Breadcrumb -->
             <div class="fm-breadcrumb">
-                <span>@currentPath</span>
+                <span>@DisplayPath(currentPath)</span>
             </div>
 
             <!-- Error -->
@@ -75,6 +75,18 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @if (currentPath != UserRootPath)
+                        {
+                            <tr class="folder-row" @ondblclick="GoUp" style="cursor:pointer; color:#555;">
+                                <td></td>
+                                <td style="text-align:center;">📁</td>
+                                <td class="file-name folder" colspan="2">.. (上一層)</td>
+                                <td></td>
+                                <td @onclick:stopPropagation="true" style="text-align:center;">
+                                    <button class="btn-icon" @onclick="GoUp" title="上一層">⬆️</button>
+                                </td>
+                            </tr>
+                        }
                         @if (files == null)
                         {
                             <tr><td colspan="6" style="text-align:center;">載入中...</td></tr>
@@ -101,12 +113,15 @@
                                     <td style="text-align:right;">@(item.IsDirectory ? "-" : FormatSize(item.Size))</td>
                                     <td>@item.Modified.ToString("yyyy-MM-dd HH:mm")</td>
                                     <td @onclick:stopPropagation="true" style="text-align:center;">
-                                        <button class="btn-icon" @onclick="@(() => NavigateTo(item.Path))" title="開啟">📂</button>
+                                        @if (item.IsDirectory)
+                                        {
+                                            <button class="btn-icon" @onclick="@(() => NavigateTo(item.Path))" title="開啟">📂</button>
+                                        }
                                         @if (!item.IsDirectory)
                                         {
                                             <button class="btn-icon" @onclick="@(() => DownloadFile(item))" title="下載">⬇️</button>
                                         }
-                                        <button class="btn-icon" @onclick="@(() => ShowRenameDialog(item))" title="重新命名">✏️</button>
+                                        <button class="btn-icon" @onclick="@(() => ShowRenameDialog(item))" @onclick:stopPropagation="true" title="重新命名">✏️<span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">重新命名</span></button>
                                         <button class="btn-icon danger" @onclick="@(() => DeleteItem(item))" title="刪除">🗑️</button>
                                     </td>
                                 </tr>
@@ -148,7 +163,7 @@
             </div>
             <div class="upload-body">
                 <p>拖曳檔案到下方，或點擊選擇：</p>
-                <InputFile multiple OnChange="@OnFileSelected" accept="*/*" />
+                <InputFile multiple OnChange="@OnFileSelected" />
                 @if (uploadFiles.Any())
                 {
                     <div class="upload-list">
@@ -187,7 +202,7 @@
             <div class="upload-body">
                 <p>已選取 @selectedPaths.Count 個項目，選擇目標資料夾：</p>
                 <p style="margin:0 0 0.5rem; font-size:0.8rem; color:#999; font-family:monospace;">
-                    📂 @_moveBrowsePath
+                    📂 @DisplayPath(_moveBrowsePath)
                 </p>
                 <div style="border:1px solid #ddd; border-radius:6px; max-height:280px; overflow-y:auto;">
                     @if (_moveBrowsePath != "/home/devpro/data")
@@ -296,6 +311,10 @@
                 else
                     errorMessage = result?.Message ?? "載入失敗";
             }
+            else if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                Nav.NavigateTo("/login", forceLoad: false);
+            }
             else
             {
                 errorMessage = $"HTTP {resp.StatusCode}";
@@ -317,12 +336,34 @@
     }
 
     // ===== Navigation =====
+    private string UserRootPath => Auth.State.IsAdmin
+        ? "/home/devpro/data"
+        : $"/home/devpro/data/{Auth.State.Domain}";
+
+    private async Task GoUp()
+    {
+        var parent = System.IO.Path.GetDirectoryName(currentPath) ?? UserRootPath;
+        // 不允許超出 domain root
+        if (!parent.StartsWith(UserRootPath))
+            parent = UserRootPath;
+        await NavigateTo(parent);
+    }
+
     private async Task NavigateTo(string path)
     {
         CloseContextMenu();
         currentPath = path;
         selectedPaths.Clear();
         await LoadFiles();
+    }
+
+    private string DisplayPath(string path)
+    {
+        var root = Auth.State.IsAdmin
+            ? "/home/devpro/data"
+            : $"/home/devpro/data/{Auth.State.Domain}";
+        var rel = path.StartsWith(root) ? path[root.Length..] : path;
+        return string.IsNullOrEmpty(rel) ? "/" : rel;
     }
 
     private async Task OnItemDoubleClick(FileItem item)
@@ -620,8 +661,7 @@
     {
         CloseContextMenu();
         if (item.IsDirectory) return;
-        var url = $"{Http.BaseAddress}api/files/download?path={Uri.EscapeDataString(item.Path)}";
-        await JSRuntime.InvokeVoidAsync("open", url, "_blank");
+        await TriggerDownload(item.Path, item.Name);
     }
 
     private async Task DownloadSelected()
@@ -635,11 +675,30 @@
         }
         foreach (var file in selectedItems)
         {
-            var url = $"{Http.BaseAddress}api/files/download?path={Uri.EscapeDataString(file.Path)}";
-            await JSRuntime.InvokeVoidAsync("open", url, "_blank");
-            await Task.Delay(200);
+            await TriggerDownload(file.Path, file.Name);
+            await Task.Delay(300);
         }
-        NotificationService.Notify(NotificationSeverity.Info, "下載", $"已開啟 {selectedItems.Count} 個下載");
+        NotificationService.Notify(NotificationSeverity.Info, "下載", $"已下載 {selectedItems.Count} 個檔案");
+    }
+
+    private async Task TriggerDownload(string path, string filename)
+    {
+        try
+        {
+            var resp = await Http.GetAsync($"api/files/download?path={Uri.EscapeDataString(path)}");
+            if (!resp.IsSuccessStatusCode)
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "下載失敗", $"{filename}：{(int)resp.StatusCode}");
+                return;
+            }
+            var bytes = await resp.Content.ReadAsByteArrayAsync();
+            var base64 = Convert.ToBase64String(bytes);
+            await JSRuntime.InvokeVoidAsync("triggerFileDownload", filename, base64);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "下載失敗", ex.Message);
+        }
     }
 
     // ===== Upload =====

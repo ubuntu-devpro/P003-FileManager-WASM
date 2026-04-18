@@ -22,6 +22,8 @@ public class JwtService : IJwtService
     private static readonly List<User> Users = new()
     {
         new User { Email = "admin@devpro.com.tw", PasswordHash = "admin123", IsAdmin = true, Domain = "devpro.com.tw" },
+        new User { Email = "abc@devpro.com.tw", PasswordHash = "abc123", IsAdmin = false, Domain = "devpro.com.tw" },
+        new User { Email = "user@msn.com", PasswordHash = "msn123", IsAdmin = false, Domain = "msn.com" },
         new User { Email = "johnny@sinopac.com", PasswordHash = "johnny123", IsAdmin = false, Domain = "sinopac.com" },
         new User { Email = "user@others.com", PasswordHash = "user123", IsAdmin = false, Domain = "others.com" },
     };

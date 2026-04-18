@@ -10,6 +10,8 @@ public record MoveRequest(string[] SourcePaths, string DestinationPath);
 
 public record DeleteRequest(string[] Paths);
 
+public record ClientLogEntry(string Level, string Message, string? Source, string? Stack, string Timestamp);
+
 // ===== Response DTOs =====
 
 public record ApiResponse(bool Success, string Message = "");

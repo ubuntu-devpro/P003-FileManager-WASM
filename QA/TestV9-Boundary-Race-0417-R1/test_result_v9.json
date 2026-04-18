@@ -1,0 +1,135 @@
+{
+  "test_run": "TestV9-Boundary-Race-0417-R1",
+  "total": 18,
+  "pass": 18,
+  "fail": 0,
+  "known": 0,
+  "cases": [
+    {
+      "case": "EDGE-001",
+      "stage": "S8",
+      "name": "Browse empty directory",
+      "status": "PASS",
+      "note": "code=200 items=[]"
+    },
+    {
+      "case": "EDGE-002",
+      "stage": "S8",
+      "name": "Browse nonexistent path",
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case": "EDGE-003",
+      "stage": "S8",
+      "name": "Special chars in filename (CJK/space/emoji)",
+      "status": "PASS",
+      "note": "upload=200 landed=True"
+    },
+    {
+      "case": "EDGE-004",
+      "stage": "S8",
+      "name": "Very long filename (250 chars)",
+      "status": "PASS",
+      "note": "upload_code=200 landed=True"
+    },
+    {
+      "case": "EDGE-005",
+      "stage": "S8",
+      "name": "0-byte file upload + listing size",
+      "status": "PASS",
+      "note": "upload=200 reported_size=0"
+    },
+    {
+      "case": "EDGE-006",
+      "stage": "S8",
+      "name": "Deep nested tree (12 levels)",
+      "status": "PASS",
+      "note": "code=200 observed_depth=0"
+    },
+    {
+      "case": "EDGE-007",
+      "stage": "S8",
+      "name": "DELETE with empty body",
+      "status": "PASS",
+      "note": "code=415 expected 400/415"
+    },
+    {
+      "case": "EDGE-008",
+      "stage": "S8",
+      "name": "Malformed JSON body",
+      "status": "PASS",
+      "note": "code=400 stack_leak=False"
+    },
+    {
+      "case": "EDGE-009",
+      "stage": "S8",
+      "name": "Wrong Content-Type",
+      "status": "PASS",
+      "note": "code=415"
+    },
+    {
+      "case": "EDGE-010",
+      "stage": "S8",
+      "name": "DELETE with empty paths array",
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case": "EDGE-011",
+      "stage": "S8",
+      "name": "MOVE with empty sourcePaths",
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case": "EDGE-012",
+      "stage": "S8",
+      "name": "Search with wildcard chars '*?'",
+      "status": "PASS",
+      "note": "code=200"
+    },
+    {
+      "case": "RACE-001",
+      "stage": "S9",
+      "name": "Concurrent rename of same file",
+      "status": "PASS",
+      "note": "codes=[200, 400] files_left=['race001_A.txt']"
+    },
+    {
+      "case": "RACE-002",
+      "stage": "S9",
+      "name": "Concurrent delete of same file",
+      "status": "PASS",
+      "note": "codes=[200, 200] file_gone=True"
+    },
+    {
+      "case": "RACE-003",
+      "stage": "S9",
+      "name": "Delete file while downloading",
+      "status": "PASS",
+      "note": "dl=200 bytes=5242880 del=200 err="
+    },
+    {
+      "case": "RACE-004",
+      "stage": "S9",
+      "name": "Concurrent upload of same filename",
+      "status": "PASS",
+      "note": "codes={'a': 200, 'b': 200} content_size=1024 pure=True"
+    },
+    {
+      "case": "RACE-005",
+      "stage": "S9",
+      "name": "Browse while deleting",
+      "status": "PASS",
+      "note": "list_codes={200} del=200"
+    },
+    {
+      "case": "RACE-006",
+      "stage": "S9",
+      "name": "Admin + user concurrent ops on same domain",
+      "status": "PASS",
+      "note": "codes=[200, 200]"
+    }
+  ]
+}
